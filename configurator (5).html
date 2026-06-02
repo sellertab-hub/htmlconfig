@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Конфигуратор КП</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #4a6cf7;
+    --accent-hover: #3a5ce6;
+    --accent-light: #eef1fe;
+    --bg: #f7f8fc;
+    --surface: #ffffff;
+    --border: #e2e6f0;
+    --border-light: #f0f2f8;
+    --text: #1a1a1a;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+    --sidebar-bg: #111827;
+    --sidebar-text: #e5e7eb;
+    --sidebar-muted: #6b7280;
+    --sidebar-active: #4a6cf7;
+    --sidebar-hover: #1f2937;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+    --sidebar-width: 240px;
+    --transition: .18s ease;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--bg);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ─────────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    scrollbar-width: thin;
+    scrollbar-color: #374151 transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid #1f2937;
+  }
+  .sidebar-logo h1 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -.3px;
+  }
+  .sidebar-logo p {
+    font-size: 11px;
+    color: var(--sidebar-muted);
+    margin-top: 2px;
+  }
+
+  .sidebar-status {
+    margin: 12px 18px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    background: #1f2937;
+    color: var(--sidebar-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sidebar-status.connected { color: #34d399; background: #052e16; }
+  .sidebar-status.error { color: #f87171; background: #2d0a0a; }
+
+  .sidebar-nav {
+    padding: 8px 0 20px;
+    flex: 1;
+  }
+  .sidebar-nav-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--sidebar-muted);
+    text-transform: uppercase;
+    padding: 14px 18px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 18px;
+    cursor: pointer;
+    color: #9ca3af;
+    font-size: 13px;
+    transition: background var(--transition), color var(--transition);
+    border-left: 3px solid transparent;
+    user-select: none;
+    text-decoration: none;
+  }
+  .nav-item:hover { background: var(--sidebar-hover); color: var(--sidebar-text); }
+  .nav-item.active { background: #1a2540; color: #fff; border-left-color: var(--sidebar-active); }
+  .nav-item .icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+
+  /* ── MAIN ─────────────────────────────────────────────── */
+  .main {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    min-height: 100vh;
+    padding: 28px 32px 60px;
+    max-width: calc(100% - var(--sidebar-width));
+  }
+
+  /* ── SECTION ─────────────────────────────────────────── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ── CARD ─────────────────────────────────────────────── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title span { color: var(--accent); font-size: 16px; }
+
+  /* ── FORM ELEMENTS ────────────────────────────────────── */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    letter-spacing: .02em;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="url"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  input[type="text"]:focus,
+  input[type="number"]:focus,
+  input[type="url"]:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(74,108,247,.12);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .field-row-2 { grid-template-columns: 1fr 1fr; }
+  .field-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .field-row-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  /* color picker pair */
+  .color-field { display: flex; align-items: center; gap: 8px; }
+  .color-field input[type="color"] {
+    width: 36px; height: 36px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    flex-shrink: 0;
+    background: var(--surface);
+  }
+  .color-field input[type="text"] { flex: 1; font-family: 'Courier New', monospace; font-size: 13px; }
+
+  /* checkbox toggle */
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .checkbox-row label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  /* img preview */
+  .img-preview {
+    width: 48px; height: 36px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    display: none;
+  }
+  .img-preview.visible { display: block; }
+  .url-with-preview { display: flex; align-items: center; gap: 8px; }
+  .url-with-preview input { flex: 1; }
+
+  /* ── REPEATER ─────────────────────────────────────────── */
+  .repeater { display: flex; flex-direction: column; gap: 14px; }
+  .repeater-item {
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+  }
+  .repeater-item-header {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  /* ── BUTTON ───────────────────────────────────────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(74,108,247,.3);
+  }
+  .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(74,108,247,.4); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-secondary {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .btn-secondary:hover { background: #dde4fd; }
+  .btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { background: var(--bg); color: var(--text); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-lg { padding: 12px 28px; font-size: 14px; }
+
+  .save-row {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .save-msg { font-size: 13px; color: var(--text-muted); }
+  .save-msg.ok { color: #059669; }
+  .save-msg.err { color: #dc2626; }
+
+  /* ── CONNECT SECTION ──────────────────────────────────── */
+  .connect-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    max-width: 640px;
+  }
+  .connect-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .connect-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; }
+  .url-row { display: flex; gap: 10px; }
+  .url-row input { flex: 1; }
+
+  /* ── TOAST ────────────────────────────────────────────── */
+  #toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    padding: 12px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,.2);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .2s, transform .2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: #059669; }
+  .toast.error { background: #dc2626; }
+  .toast.info { background: var(--accent); }
+
+  /* ── LOADING OVERLAY ──────────────────────────────────── */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.3);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+  }
+  .loading-overlay.show { display: flex; }
+  .loading-spinner {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── COLOR GROUPS ─────────────────────────────────────── */
+  .color-group { margin-bottom: 20px; }
+  .color-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  /* ── TABS ─────────────────────────────────────────────── */
+  .tabs { display: flex; gap: 2px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+  .tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color var(--transition), border-color var(--transition);
+    user-select: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── SCROLLBAR ───────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── RESPONSIVE ──────────────────────────────────────── */
+  @media (max-width: 900px) {
+    :root { --sidebar-width: 200px; }
+    .main { padding: 20px 18px 40px; }
+    .field-row-4 { grid-template-columns: 1fr 1fr; }
+    .field-row-3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    .sidebar { transform: translateX(-100%); transition: transform .25s; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; max-width: 100%; }
+    .field-row-2, .field-row-3, .field-row-4 { grid-template-columns: 1fr; }
+    .mobile-menu-btn { display: flex; }
+  }
+  .mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 12px; left: 12px;
+    z-index: 200;
+    background: var(--sidebar-bg);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 18px;
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-menu-btn" onclick="toggleSidebar()" title="Меню">☰</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <h1>⚙️ Конфигуратор КП</h1>
+    <p>Редактор настроек лендинга</p>
+  </div>
+  <div class="sidebar-status" id="conn-status">
+    <span>●</span> Не подключено
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-label">Разделы</div>
+    <a class="nav-item active" onclick="showSection('connect')" href="#">
+      <span class="icon">🔗</span> Подключение
+    </a>
+    <a class="nav-item" onclick="showSection('theme')" href="#">
+      <span class="icon">🎨</span> Тема
+    </a>
+    <a class="nav-item" onclick="showSection('banner')" href="#">
+      <span class="icon">🎠</span> Баннер
+    </a>
+    <a class="nav-item" onclick="showSection('counters')" href="#">
+      <span class="icon">🔢</span> Счётчики
+    </a>
+    <a class="nav-item" onclick="showSection('about')" href="#">
+      <span class="icon">🏢</span> О компании
+    </a>
+    <a class="nav-item" onclick="showSection('steps')" href="#">
+      <span class="icon">🪜</span> Этапы работы
+    </a>
+    <a class="nav-item" onclick="showSection('faq')" href="#">
+      <span class="icon">❓</span> FAQ
+    </a>
+    <a class="nav-item" onclick="showSection('reviews')" href="#">
+      <span class="icon">⭐</span> Отзывы
+    </a>
+    <a class="nav-item" onclick="showSection('projects')" href="#">
+      <span class="icon">📐</span> Проекты
+    </a>
+    <a class="nav-item" onclick="showSection('cta')" href="#">
+      <span class="icon">🎯</span> CTA
+    </a>
+    <a class="nav-item" onclick="showSection('footer')" href="#">
+      <span class="icon">🦶</span> Футер
+    </a>
+    <a class="nav-item" onclick="showSection('installment')" href="#">
+      <span class="icon">💳</span> Рассрочка
+    </a>
+    <a class="nav-item" onclick="showSection('advantages')" href="#">
+      <span class="icon">🛡️</span> Гарантии
+    </a>
+    <a class="nav-item" onclick="showSection('estimate')" href="#">
+      <span class="icon">📊</span> Смета
+    </a>
+  </nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- ── ПОДКЛЮЧЕНИЕ ──────────────────────────────────────── -->
+  <section class="section active" id="sec-connect">
+    <div class="section-header">
+      <h2><span>🔗</span> Подключение к скрипту</h2>
+      <p>Укажите URL вашего Google Apps Script WebApp для загрузки и сохранения данных.</p>
+    </div>
+    <div class="connect-card">
+      <h3>URL скрипта (WebApp)</h3>
+      <p>Разверните скрипт как WebApp («Выполнять как: я» / «Доступ: все»), скопируйте URL и вставьте ниже.</p>
+      <div class="url-row">
+        <input type="text" id="webapp-url" placeholder="https://script.google.com/macros/s/.../exec" />
+        <button class="btn btn-primary" onclick="connectAndLoad()">Подключить и загрузить</button>
+      </div>
+      <div style="margin-top:16px;font-size:13px;color:var(--text-muted);" id="connect-detail"></div>
+    </div>
+
+    <div style="margin-top:28px;" class="card">
+      <div class="card-title"><span>💡</span> Как это работает</div>
+      <ul style="font-size:13px;color:var(--text-muted);line-height:2;padding-left:16px;">
+        <li><strong>Подключить</strong> — проверяет доступность скрипта через <code>?action=ping</code></li>
+        <li><strong>Загрузить</strong> — получает текущие данные через <code>?action=getConfig</code></li>
+        <li><strong>Сохранить [блок]</strong> — отправляет изменения POST-запросом на скрипт</li>
+        <li>URL сохраняется в localStorage и восстанавливается при следующем открытии</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── ТЕМА ────────────────────────────────────────────── -->
+  <section class="section" id="sec-theme">
+    <div class="section-header">
+      <h2><span>🎨</span> Тема</h2>
+      <p>CSS-переменные, цвета и шрифты лендинга.</p>
+    </div>
+
+    <div class="card">
+      <div class="color-group">
+        <div class="color-group-title">Глобальные цвета</div>
+        <div class="color-grid">
+          <div class="field"><label>--brand</label><div class="color-field"><input type="color" id="css-brand-c" oninput="syncColorToText(this,'css-brand')"><input type="text" id="css-brand" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-brand-c')"></div></div>
+          <div class="field"><label>--brand-hover</label><div class="color-field"><input type="color" id="css-brand-hover-c" oninput="syncColorToText(this,'css-brand-hover')"><input type="text" id="css-brand-hover" placeholder="#3a5ce6" oninput="syncTextToColor(this,'css-brand-hover-c')"></div></div>
+          <div class="field"><label>--brand-light</label><div class="color-field"><input type="color" id="css-brand-light-c" oninput="syncColorToText(this,'css-brand-light')"><input type="text" id="css-brand-light" placeholder="#eef1fe" oninput="syncTextToColor(this,'css-brand-light-c')"></div></div>
+          <div class="field"><label>--bg</label><div class="color-field"><input type="color" id="css-bg-c" oninput="syncColorToText(this,'css-bg')"><input type="text" id="css-bg" placeholder="#ffffff" oninput="syncTextToColor(this,'css-bg-c')"></div></div>
+          <div class="field"><label>--bg-alt</label><div class="color-field"><input type="color" id="css-bg-alt-c" oninput="syncColorToText(this,'css-bg-alt')"><input type="text" id="css-bg-alt" placeholder="#f7f8fc" oninput="syncTextToColor(this,'css-bg-alt-c')"></div></div>
+          <div class="field"><label>--surface</label><div class="color-field"><input type="color" id="css-surface-c" oninput="syncColorToText(this,'css-surface')"><input type="text" id="css-surface" placeholder="#ffffff" oninput="syncTextToColor(this,'css-surface-c')"></div></div>
+          <div class="field"><label>--border</label><div class="color-field"><input type="color" id="css-border-c" oninput="syncColorToText(this,'css-border')"><input type="text" id="css-border" placeholder="#e2e6f0" oninput="syncTextToColor(this,'css-border-c')"></div></div>
+          <div class="field"><label>--border-light</label><div class="color-field"><input type="color" id="css-border-light-c" oninput="syncColorToText(this,'css-border-light')"><input type="text" id="css-border-light" placeholder="#f0f2f8" oninput="syncTextToColor(this,'css-border-light-c')"></div></div>
+          <div class="field"><label>--text</label><div class="color-field"><input type="color" id="css-text-c" oninput="syncColorToText(this,'css-text')"><input type="text" id="css-text" placeholder="#1a1a1a" oninput="syncTextToColor(this,'css-text-c')"></div></div>
+          <div class="field"><label>--text-muted</label><div class="color-field"><input type="color" id="css-text-muted-c" oninput="syncColorToText(this,'css-text-muted')"><input type="text" id="css-text-muted" placeholder="#6b7280" oninput="syncTextToColor(this,'css-text-muted-c')"></div></div>
+          <div class="field"><label>--text-faint</label><div class="color-field"><input type="color" id="css-text-faint-c" oninput="syncColorToText(this,'css-text-faint')"><input type="text" id="css-text-faint" placeholder="#9ca3af" oninput="syncTextToColor(this,'css-text-faint-c')"></div></div>
+        </div>
+      </div>
+
+      <div class="color-group">
+        <div class="color-group-title">Шрифт</div>
+        <div class="field-row field-row-2">
+          <div class="field"><label>font-family</label><input type="text" id="css-font-family" placeholder="Inter, sans-serif"></div>
+          <div class="field"><label>font-size-base</label><input type="text" id="css-font-size-base" placeholder="16px"></div>
+        </div>
+      </div>
+
+      <div class="color-group">
+        <div class="color-group-title">Баннер</div>
+        <div class="color-grid">
+          <div class="field"><label>banner-bg-fallback</label><div class="color-field"><input type="color" id="css-banner-bg-fallback-c" oninput="syncColorToText(this,'css-banner-bg-fallback')"><input type="text" id="css-banner-bg-fallback" placeholder="#1a1a2e" oninput="syncTextToColor(this,'css-banner-bg-fallback-c')"></div></div>
+          <div class="field"><label>banner-title-color</label><div class="color-field"><input type="color" id="css-banner-title-color-c" oninput="syncColorToText(this,'css-banner-title-color')"><input type="text" id="css-banner-title-color" placeholder="#ffffff" oninput="syncTextToColor(this,'css-banner-title-color-c')"></div></div>
+          <div class="field"><label>banner-dot-active</label><div class="color-field"><input type="color" id="css-banner-dot-active-c" oninput="syncColorToText(this,'css-banner-dot-active')"><input type="text" id="css-banner-dot-active" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-banner-dot-active-c')"></div></div>
+        </div>
+      </div>
+
+      <div class="color-group">
+        <div class="color-group-title">Счётчики</div>
+        <div class="color-grid">
+          <div class="field"><label>counter-bg</label><div class="color-field"><input type="color" id="css-counter-bg-c" oninput="syncColorToText(this,'css-counter-bg')"><input type="text" id="css-counter-bg" placeholder="#f0f4ff" oninput="syncTextToColor(this,'css-counter-bg-c')"></div></div>
+          <div class="field"><label>counter-number</label><div class="color-field"><input type="color" id="css-counter-number-c" oninput="syncColorToText(this,'css-counter-number')"><input type="text" id="css-counter-number" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-counter-number-c')"></div></div>
+          <div class="field"><label>counter-suffix</label><div class="color-field"><input type="color" id="css-counter-suffix-c" oninput="syncColorToText(this,'css-counter-suffix')"><input type="text" id="css-counter-suffix" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-counter-suffix-c')"></div></div>
+          <div class="field"><label>counter-label</label><div class="color-field"><input type="color" id="css-counter-label-c" oninput="syncColorToText(this,'css-counter-label')"><input type="text" id="css-counter-label" placeholder="#6b7280" oninput="syncTextToColor(this,'css-counter-label-c')"></div></div>
+          <div class="field"><label>counter-divider</label><div class="color-field"><input type="color" id="css-counter-divider-c" oninput="syncColorToText(this,'css-counter-divider')"><input type="text" id="css-counter-divider" placeholder="#e2e6f0" oninput="syncTextToColor(this,'css-counter-divider-c')"></div></div>
+        </div>
+      </div>
+
+      <div class="color-group">
+        <div class="color-group-title">О компании</div>
+        <div class="color-grid">
+          <div class="field"><label>about-bg</label><div class="color-field"><input type="color" id="css-about-bg-c" oninput="syncColorToText(this,'css-about-bg')"><input type="text" id="css-about-bg" placeholder="#f7f8fc" oninput="syncTextToColor(this,'css-about-bg-c')"></div></div>
+          <div class="field"><label>about-text</label><div class="color-field"><input type="color" id="css-about-text-c" oninput="syncColorToText(this,'css-about-text')"><input type="text" id="css-about-text" placeholder="#1a1a1a" oninput="syncTextToColor(this,'css-about-text-c')"></div></div>
+          <div class="field"><label>about-fact-bg</label><div class="color-field"><input type="color" id="css-about-fact-bg-c" oninput="syncColorToText(this,'css-about-fact-bg')"><input type="text" id="css-about-fact-bg" placeholder="#ffffff" oninput="syncTextToColor(this,'css-about-fact-bg-c')"></div></div>
+          <div class="field"><label>about-fact-title</label><div class="color-field"><input type="color" id="css-about-fact-title-c" oninput="syncColorToText(this,'css-about-fact-title')"><input type="text" id="css-about-fact-title" placeholder="#1a1a1a" oninput="syncTextToColor(this,'css-about-fact-title-c')"></div></div>
+          <div class="field"><label>about-fact-label</label><div class="color-field"><input type="color" id="css-about-fact-label-c" oninput="syncColorToText(this,'css-about-fact-label')"><input type="text" id="css-about-fact-label" placeholder="#6b7280" oninput="syncTextToColor(this,'css-about-fact-label-c')"></div></div>
+        </div>
+      </div>
+
+      <div class="color-group">
+        <div class="color-group-title">Этапы работы</div>
+        <div class="color-grid">
+          <div class="field"><label>steps-card-bg</label><div class="color-field"><input type="color" id="css-steps-card-bg-c" oninput="syncColorToText(this,'css-steps-card-bg')"><input type="text" id="css-steps-card-bg" placeholder="#ffffff" oninput="syncTextToColor(this,'css-steps-card-bg-c')"></div></div>
+          <div class="field"><label>steps-accent</label><div class="color-field"><input type="color" id="css-steps-accent-c" oninput="syncColorToText(this,'css-steps-accent')"><input type="text" id="css-steps-accent" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-steps-accent-c')"></div></div>
+          <div class="field"><label>steps-title</label><div class="color-field"><input type="color" id="css-steps-title-c" oninput="syncColorToText(this,'css-steps-title')"><input type="text" id="css-steps-title" placeholder="#1a1a1a" oninput="syncTextToColor(this,'css-steps-title-c')"></div></div>
+          <div class="field"><label>steps-desc</label><div class="color-field"><input type="color" id="css-steps-desc-c" oninput="syncColorToText(this,'css-steps-desc')"><input type="text" id="css-steps-desc" placeholder="#6b7280" oninput="syncTextToColor(this,'css-steps-desc-c')"></div></div>
+          <div class="field"><label>steps-arrow</label><div class="color-field"><input type="color" id="css-steps-arrow-c" oninput="syncColorToText(this,'css-steps-arrow')"><input type="text" id="css-steps-arrow" placeholder="#d1d5db" oninput="syncTextToColor(this,'css-steps-arrow-c')"></div></div>
+        </div>
+      </div>
+
+      <div class="color-group">
+        <div class="color-group-title">FAQ</div>
+        <div class="color-grid">
+          <div class="field"><label>faq-bg</label><div class="color-field"><input type="color" id="css-faq-bg-c" oninput="syncColorToText(this,'css-faq-bg')"><input type="text" id="css-faq-bg" placeholder="#ffffff" oninput="syncTextToColor(this,'css-faq-bg-c')"></div></div>
+          <div class="field"><label>faq-hover</label><div class="color-field"><input type="color" id="css-faq-hover-c" oninput="syncColorToText(this,'css-faq-hover')"><input type="text" id="css-faq-hover" placeholder="#f7f8fc" oninput="syncTextToColor(this,'css-faq-hover-c')"></div></div>
+          <div class="field"><label>faq-open-border</label><div class="color-field"><input type="color" id="css-faq-open-border-c" oninput="syncColorToText(this,'css-faq-open-border')"><input type="text" id="css-faq-open-border" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-faq-open-border-c')"></div></div>
+        </div>
+      </div>
+
+      <div class="color-group" style="margin-bottom:0">
+        <div class="color-group-title">Логотип</div>
+        <div class="field-row field-row-2">
+          <div class="field">
+            <label>URL логотипа</label>
+            <div class="url-with-preview">
+              <input type="text" id="theme-logo" placeholder="https://..." oninput="updatePreview(this,'theme-logo-preview')">
+              <img id="theme-logo-preview" class="img-preview" alt="logo">
+            </div>
+          </div>
+          <div class="field"><label>Ссылка логотипа (logoHref)</label><input type="text" id="theme-logoHref" placeholder="/"></div>
+        </div>
+      </div>
+
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('theme')">Сохранить тему</button>
+        <span class="save-msg" id="save-msg-theme"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── БАННЕР ───────────────────────────────────────────── -->
+  <section class="section" id="sec-banner">
+    <div class="section-header">
+      <h2><span>🎠</span> Баннер</h2>
+      <p>Слайды главного баннера.</p>
+    </div>
+    <div class="card">
+      <div class="repeater" id="banner-slides">
+        <!-- generated by JS -->
+      </div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('banner')">Сохранить баннер</button>
+        <span class="save-msg" id="save-msg-banner"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── СЧЁТЧИКИ ─────────────────────────────────────────── -->
+  <section class="section" id="sec-counters">
+    <div class="section-header">
+      <h2><span>🔢</span> Счётчики</h2>
+      <p>Числовые показатели компании.</p>
+    </div>
+    <div class="card">
+      <div class="field"><label>Заголовок секции</label><input type="text" id="counters-heading" placeholder="Наши результаты"></div>
+      <div class="repeater" id="counters-items" style="margin-top:16px;"></div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('counters')">Сохранить счётчики</button>
+        <span class="save-msg" id="save-msg-counters"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── О КОМПАНИИ ───────────────────────────────────────── -->
+  <section class="section" id="sec-about">
+    <div class="section-header">
+      <h2><span>🏢</span> О компании</h2>
+    </div>
+    <div class="card">
+      <div class="field"><label>Заголовок секции</label><input type="text" id="about-heading" placeholder="О нас"></div>
+      <div class="field"><label>Текст описания</label><textarea id="about-text" rows="4" placeholder="Описание компании..."></textarea></div>
+      <div class="field-row field-row-2">
+        <div class="field"><label>ID YouTube-видео</label><input type="text" id="about-youtubeId" placeholder="dQw4w9WgXcQ"></div>
+        <div class="field"><label>Подпись под видео</label><input type="text" id="about-videoLabel" placeholder="Смотреть видео о нас"></div>
+      </div>
+      <div style="margin-top:8px;margin-bottom:8px;padding:10px 0;border-top:1px solid var(--border-light);">
+        <div class="card-title" style="margin-bottom:12px;"><span>📌</span> Факты о компании (4 шт.)</div>
+        <div class="repeater" id="about-facts"></div>
+      </div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('about')">Сохранить «О компании»</button>
+        <span class="save-msg" id="save-msg-about"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ЭТАПЫ РАБОТЫ ─────────────────────────────────────── -->
+  <section class="section" id="sec-steps">
+    <div class="section-header">
+      <h2><span>🪜</span> Этапы работы</h2>
+    </div>
+    <div class="card">
+      <div class="field"><label>Заголовок секции</label><input type="text" id="steps-heading" placeholder="Как мы работаем"></div>
+      <div class="repeater" id="steps-items" style="margin-top:16px;"></div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('steps')">Сохранить этапы</button>
+        <span class="save-msg" id="save-msg-steps"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FAQ ─────────────────────────────────────────────── -->
+  <section class="section" id="sec-faq">
+    <div class="section-header">
+      <h2><span>❓</span> FAQ</h2>
+      <p>Часто задаваемые вопросы.</p>
+    </div>
+    <div class="card">
+      <div class="field"><label>Заголовок секции</label><input type="text" id="faq-heading" placeholder="Вопросы и ответы"></div>
+      <div class="repeater" id="faq-items" style="margin-top:16px;"></div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('faq')">Сохранить FAQ</button>
+        <span class="save-msg" id="save-msg-faq"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ОТЗЫВЫ ───────────────────────────────────────────── -->
+  <section class="section" id="sec-reviews">
+    <div class="section-header">
+      <h2><span>⭐</span> Отзывы</h2>
+    </div>
+    <div class="card">
+      <div class="field"><label>Заголовок секции</label><input type="text" id="reviews-heading" placeholder="Отзывы клиентов"></div>
+      <div class="repeater" id="reviews-items" style="margin-top:16px;"></div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('reviews')">Сохранить отзывы</button>
+        <span class="save-msg" id="save-msg-reviews"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ПРОЕКТЫ ──────────────────────────────────────────── -->
+  <section class="section" id="sec-projects">
+    <div class="section-header">
+      <h2><span>📐</span> Проекты</h2>
+    </div>
+    <div class="card">
+      <div class="field"><label>Заголовок секции</label><input type="text" id="projects-heading" placeholder="Наши проекты"></div>
+      <div class="repeater" id="projects-items" style="margin-top:16px;"></div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('projects')">Сохранить проекты</button>
+        <span class="save-msg" id="save-msg-projects"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ─────────────────────────────────────────────── -->
+  <section class="section" id="sec-cta">
+    <div class="section-header">
+      <h2><span>🎯</span> CTA — призыв к действию</h2>
+    </div>
+    <div class="card">
+      <div class="field-row field-row-3">
+        <div class="field"><label>Кикер</label><input type="text" id="cta-kicker" placeholder="Специальное предложение"></div>
+        <div class="field"><label>Заголовок</label><input type="text" id="cta-heading" placeholder="Оставьте заявку"></div>
+        <div class="field"><label>Подзаголовок</label><input type="text" id="cta-subheading" placeholder="Рассчитаем стоимость бесплатно"></div>
+      </div>
+      <div style="margin:16px 0 8px;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">4 бейджа</div>
+      <div class="field-row field-row-4">
+        <div class="field"><label>Бейдж 1</label><input type="text" id="cta-badge-0" placeholder="Бесплатный расчёт"></div>
+        <div class="field"><label>Бейдж 2</label><input type="text" id="cta-badge-1" placeholder="Гарантия"></div>
+        <div class="field"><label>Бейдж 3</label><input type="text" id="cta-badge-2" placeholder="Опыт 10 лет"></div>
+        <div class="field"><label>Бейдж 4</label><input type="text" id="cta-badge-3" placeholder="Рассрочка"></div>
+      </div>
+      <div class="field-row field-row-3" style="margin-top:8px;">
+        <div class="field"><label>Текст главной кнопки</label><input type="text" id="cta-btnOrder" placeholder="Оставить заявку"></div>
+        <div class="field"><label>Текст кнопки звонка</label><input type="text" id="cta-btnCall" placeholder="Позвонить"></div>
+        <div class="field"><label>Мелкий текст под кнопками</label><input type="text" id="cta-note" placeholder="Ответим в течение 15 минут"></div>
+      </div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('cta')">Сохранить CTA</button>
+        <span class="save-msg" id="save-msg-cta"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ФУТЕР ────────────────────────────────────────────── -->
+  <section class="section" id="sec-footer">
+    <div class="section-header">
+      <h2><span>🦶</span> Футер</h2>
+    </div>
+    <div class="card">
+      <div class="field-row field-row-2">
+        <div class="field"><label>Название компании</label><input type="text" id="footer-company" placeholder="ООО Компания"></div>
+        <div class="field"><label>Email</label><input type="text" id="footer-email" placeholder="info@company.ru"></div>
+      </div>
+      <div class="field"><label>Описание</label><textarea id="footer-description" rows="3" placeholder="Описание компании в футере"></textarea></div>
+
+      <div class="card-title" style="margin:16px 0 12px;"><span>📱</span> Соцсети</div>
+      <div class="field-row field-row-4">
+        <div class="field"><label>Telegram</label><input type="text" id="footer-tg" placeholder="https://t.me/..."></div>
+        <div class="field"><label>WhatsApp</label><input type="text" id="footer-wa" placeholder="https://wa.me/..."></div>
+        <div class="field"><label>Instagram</label><input type="text" id="footer-ig" placeholder="https://instagram.com/..."></div>
+        <div class="field"><label>YouTube</label><input type="text" id="footer-yt" placeholder="https://youtube.com/..."></div>
+      </div>
+
+      <div class="card-title" style="margin:16px 0 12px;"><span>📋</span> Каталог (5 пунктов)</div>
+      <div id="footer-catalog-items" class="repeater"></div>
+
+      <div class="card-title" style="margin:16px 0 12px;"><span>ℹ️</span> Инфо (4 пункта)</div>
+      <div id="footer-info-items" class="repeater"></div>
+
+      <div class="card-title" style="margin:16px 0 12px;"><span>📍</span> Контакты</div>
+      <div class="field-row field-row-3">
+        <div class="field"><label>Адрес</label><input type="text" id="footer-address" placeholder="г. Москва, ул. Примерная, 1"></div>
+        <div class="field"><label>Телефон (отображение)</label><input type="text" id="footer-phone" placeholder="+7 (999) 123-45-67"></div>
+        <div class="field"><label>Телефон (ссылка)</label><input type="text" id="footer-phoneHref" placeholder="+79991234567"></div>
+      </div>
+
+      <div class="card-title" style="margin:16px 0 12px;"><span>👤</span> Менеджер</div>
+      <div class="field-row field-row-3">
+        <div class="field"><label>Имя</label><input type="text" id="footer-mgr-name" placeholder="Иван Иванов"></div>
+        <div class="field"><label>Должность</label><input type="text" id="footer-mgr-position" placeholder="Менеджер"></div>
+        <div class="field"><label>Телефон (отображение)</label><input type="text" id="footer-mgr-phone" placeholder="+7 (999) 123-45-67"></div>
+      </div>
+      <div class="field-row field-row-4">
+        <div class="field"><label>Телефон (ссылка)</label><input type="text" id="footer-mgr-phoneHref" placeholder="+79991234567"></div>
+        <div class="field"><label>Telegram</label><input type="text" id="footer-mgr-tg" placeholder="https://t.me/..."></div>
+        <div class="field"><label>Viber</label><input type="text" id="footer-mgr-viber" placeholder="viber://chat?number=..."></div>
+        <div class="field">
+          <label>Фото (URL)</label>
+          <div class="url-with-preview">
+            <input type="text" id="footer-mgr-photo" placeholder="https://..." oninput="updatePreview(this,'footer-mgr-photo-preview')">
+            <img id="footer-mgr-photo-preview" class="img-preview" alt="фото">
+          </div>
+        </div>
+      </div>
+
+      <div class="card-title" style="margin:16px 0 12px;"><span>🗺️</span> Карта</div>
+      <div class="field-row field-row-2">
+        <div class="field"><label>Широта (lat)</label><input type="text" id="footer-lat" placeholder="55.7558"></div>
+        <div class="field"><label>Долгота (lng)</label><input type="text" id="footer-lng" placeholder="37.6176"></div>
+      </div>
+
+      <div class="card-title" style="margin:16px 0 12px;"><span>©</span> Юридическое</div>
+      <div class="field-row field-row-3">
+        <div class="field"><label>Копирайт</label><input type="text" id="footer-copyright" placeholder="© 2024 ООО Компания"></div>
+        <div class="field"><label>Ссылка «Политика»</label><input type="text" id="footer-linkPolicy" placeholder="/policy"></div>
+        <div class="field"><label>Ссылка «Оферта»</label><input type="text" id="footer-linkOffer" placeholder="/offer"></div>
+      </div>
+
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('footer')">Сохранить футер</button>
+        <span class="save-msg" id="save-msg-footer"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── РАССРОЧКА ────────────────────────────────────────── -->
+  <section class="section" id="sec-installment">
+    <div class="section-header">
+      <h2><span>💳</span> Рассрочка</h2>
+    </div>
+    <div class="card">
+      <div class="checkbox-row"><input type="checkbox" id="installment-show"><label for="installment-show">Показывать блок рассрочки</label></div>
+      <div class="field-row field-row-2" style="margin-top:14px;">
+        <div class="field"><label>Заголовок блока</label><input type="text" id="installment-heading" placeholder="Рассрочка"></div>
+        <div class="field"><label>Подпись под калькулятором</label><input type="text" id="installment-note" placeholder="Без переплаты"></div>
+      </div>
+      <div class="card-title" style="margin:16px 0 12px;"><span>📆</span> Периоды (4 шт.)</div>
+      <div class="repeater" id="installment-periods"></div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('installment')">Сохранить рассрочку</button>
+        <span class="save-msg" id="save-msg-installment"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ГАРАНТИИ ─────────────────────────────────────────── -->
+  <section class="section" id="sec-advantages">
+    <div class="section-header">
+      <h2><span>🛡️</span> Гарантии</h2>
+    </div>
+    <div class="card">
+      <div class="field-row field-row-2">
+        <div class="field"><label>Заголовок секции</label><input type="text" id="advantages-heading" placeholder="Наши гарантии"></div>
+        <div class="field"><label>Интервал анимации (мс)</label><input type="number" id="advantages-interval" placeholder="1500"></div>
+      </div>
+      <div class="card-title" style="margin:16px 0 12px;"><span>✅</span> Пункты (8 шт.)</div>
+      <div class="repeater" id="advantages-items"></div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('advantages')">Сохранить гарантии</button>
+        <span class="save-msg" id="save-msg-advantages"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── СМЕТА ────────────────────────────────────────────── -->
+  <section class="section" id="sec-estimate">
+    <div class="section-header">
+      <h2><span>📊</span> Смета</h2>
+    </div>
+    <div class="card">
+      <div class="field-row field-row-4">
+        <div class="field"><label>Часов действия скидки</label><input type="number" id="estimate-discountHours" placeholder="2"></div>
+        <div class="field"><label>Дней действия КП</label><input type="number" id="estimate-validDays" placeholder="14"></div>
+        <div class="field">
+          <label>Тип сметы</label>
+          <select id="estimate-viewMode">
+            <option value="list">Список</option>
+            <option value="table">Таблица</option>
+            <option value="table-photo">Таблица с фото</option>
+          </select>
+        </div>
+        <div class="field" style="display:flex;align-items:flex-end;padding-bottom:2px;">
+          <div class="checkbox-row"><input type="checkbox" id="estimate-showTotals"><label for="estimate-showTotals">Показывать итого</label></div>
+        </div>
+      </div>
+      <div class="field"><label>Текст когда скидка истекла</label><input type="text" id="estimate-discountExpired" placeholder="Скидка больше не действует"></div>
+      <div class="field"><label>Текст когда КП истёк</label><textarea id="estimate-offerExpired" rows="3" placeholder="Срок действия коммерческого предложения истёк..."></textarea></div>
+      <div class="save-row">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('estimate')">Сохранить смету</button>
+        <span class="save-msg" id="save-msg-estimate"></span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<script>
+'use strict';
+
+// ── STATE ────────────────────────────────────────────────────
+let webappUrl = '';
+const LS_KEY = 'kp_webapp_url';
+
+// ── INIT ─────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  buildRepeaters();
+  const saved = localStorage.getItem(LS_KEY);
+  if (saved) {
+    document.getElementById('webapp-url').value = saved;
+    webappUrl = saved;
+  }
+});
+
+// ── SIDEBAR NAV ──────────────────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  // find matching nav item by onclick
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + name + "'")) {
+      n.classList.add('active');
+    }
+  });
+  window.scrollTo(0, 0);
+  // close mobile sidebar
+  if (window.innerWidth <= 640) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ── CONNECT ──────────────────────────────────────────────────
+async function connectAndLoad() {
+  const urlInput = document.getElementById('webapp-url');
+  const url = urlInput.value.trim();
+  if (!url) { showToast('Введите URL скрипта', 'error'); return; }
+
+  setStatus('loading', 'Проверяем соединение…');
+  showLoading(true);
+  document.getElementById('connect-detail').textContent = '';
+
+  try {
+    const pingUrl = url + '?action=ping&t=' + Date.now();
+    const resp = await fetch(pingUrl, { mode: 'cors', cache: 'no-store' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    let json;
+    try { json = JSON.parse(text); } catch(e) { json = { ok: true }; }
+    if (json.ok === false) throw new Error(json.error || 'Скрипт вернул ошибку');
+
+    webappUrl = url;
+    localStorage.setItem(LS_KEY, url);
+    setStatus('connected', '✅ Подключено');
+    document.getElementById('connect-detail').textContent = 'Соединение установлено. Загружаем данные…';
+    showToast('Подключено! Загружаем конфиг…', 'success');
+
+    await loadConfig();
+  } catch (err) {
+    setStatus('error', '❌ Ошибка');
+    document.getElementById('connect-detail').textContent = 'Ошибка: ' + err.message;
+    showToast('Ошибка подключения: ' + err.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function loadConfig() {
+  if (!webappUrl) return;
+  showLoading(true);
+  try {
+    const url = webappUrl + '?action=getConfig&t=' + Date.now();
+    const resp = await fetch(url, { mode: 'cors', cache: 'no-store' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const json = await resp.json();
+    if (json.ok === false) throw new Error(json.error || 'getConfig failed');
+    populateAll(json);
+    document.getElementById('connect-detail').textContent = 'Данные загружены успешно.';
+    showToast('Конфигурация загружена ✅', 'success');
+  } catch (err) {
+    showToast('Ошибка загрузки: ' + err.message, 'error');
+    document.getElementById('connect-detail').textContent = 'Ошибка загрузки: ' + err.message;
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ── POPULATE ALL ─────────────────────────────────────────────
+function populateAll(cfg) {
+  const b = cfg.blocks || cfg;
+  if (b.theme)       populateTheme(b.theme);
+  if (b.banner)      populateBanner(b.banner);
+  if (b.counters)    populateCounters(b.counters);
+  if (b.about)       populateAbout(b.about);
+  if (b.steps)       populateSteps(b.steps);
+  if (b.faq)         populateFaq(b.faq);
+  if (b.reviews)     populateReviews(b.reviews);
+  if (b.projects)    populateProjects(b.projects);
+  if (b.cta)         populateCta(b.cta);
+  if (b.footer)      populateFooter(b.footer);
+  if (b.installment) populateInstallment(b.installment);
+  if (b.advantages)  populateAdvantages(b.advantages);
+  if (b.estimate)    populateEstimate(b.estimate);
+}
+
+// ── THEME ─────────────────────────────────────────────────────
+const CSS_VAR_IDS = [
+  '--brand','--brand-hover','--brand-light','--bg','--bg-alt','--surface',
+  '--border','--border-light','--text','--text-muted','--text-faint',
+  'banner-bg-fallback','banner-title-color','banner-dot-active',
+  'counter-bg','counter-number','counter-suffix','counter-label','counter-divider',
+  'about-bg','about-text','about-fact-bg','about-fact-title','about-fact-label',
+  'steps-card-bg','steps-accent','steps-title','steps-desc','steps-arrow',
+  'faq-bg','faq-hover','faq-open-border'
+];
+
+function cssVarToId(v) { return 'css-' + v.replace(/^--/,'').replace(/-/g,'-'); }
+
+function populateTheme(d) {
+  const vars = d.cssVars || {};
+  const other = d.other || {};
+  CSS_VAR_IDS.forEach(v => {
+    const id = cssVarToId(v);
+    const val = vars[v.startsWith('--') ? v : '--' + v] || vars[v] || '';
+    setColorField(id, val);
+  });
+  setVal('css-font-family', other['font-family'] || '');
+  setVal('css-font-size-base', other['font-size-base'] || '');
+  setVal('theme-logo', d.logo || '');
+  setVal('theme-logoHref', d.logoHref || '');
+  if (d.logo) triggerPreview('theme-logo', 'theme-logo-preview');
+}
+
+function collectTheme() {
+  const cssVars = {};
+  CSS_VAR_IDS.forEach(v => {
+    const id = cssVarToId(v);
+    const el = document.getElementById(id);
+    if (el) cssVars[v.startsWith('--') ? v : '--' + v] = el.value;
+  });
+  return {
+    cssVars,
+    other: {
+      'font-family': getVal('css-font-family'),
+      'font-size-base': getVal('css-font-size-base')
+    },
+    logo: getVal('theme-logo'),
+    logoHref: getVal('theme-logoHref')
+  };
+}
+
+// ── BANNER ───────────────────────────────────────────────────
+function buildBannerSlides() {
+  const c = document.getElementById('banner-slides');
+  c.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">Слайд ${i+1}</div>
+      <div class="field"><label>Заголовок</label><input type="text" id="banner-title-${i}" placeholder="Заголовок слайда ${i+1}"></div>
+      <div class="field">
+        <label>URL фото</label>
+        <div class="url-with-preview">
+          <input type="text" id="banner-img-${i}" placeholder="https://..." oninput="updatePreview(this,'banner-img-preview-${i}')">
+          <img id="banner-img-preview-${i}" class="img-preview" alt="фото">
+        </div>
+      </div>
+      <div class="field"><label>Ссылка (клик)</label><input type="text" id="banner-link-${i}" placeholder="https://..."></div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateBanner(d) {
+  const slides = d.slides || [];
+  for (let i = 0; i < 3; i++) {
+    const s = slides[i] || {};
+    setVal('banner-title-' + i, s.title || '');
+    setVal('banner-img-' + i, s.img || '');
+    setVal('banner-link-' + i, s.link || '');
+    if (s.img) triggerPreview('banner-img-' + i, 'banner-img-preview-' + i);
+  }
+}
+
+function collectBanner() {
+  const slides = [];
+  for (let i = 0; i < 3; i++) {
+    slides.push({
+      title: getVal('banner-title-' + i),
+      img: getVal('banner-img-' + i),
+      link: getVal('banner-link-' + i)
+    });
+  }
+  return { slides };
+}
+
+// ── COUNTERS ─────────────────────────────────────────────────
+function buildCounterItems() {
+  const c = document.getElementById('counters-items');
+  c.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">Счётчик ${i+1}</div>
+      <div class="field-row field-row-3">
+        <div class="field"><label>Число</label><input type="text" id="counter-value-${i}" placeholder="100"></div>
+        <div class="field"><label>Суффикс</label><input type="text" id="counter-suffix-${i}" placeholder="+"></div>
+        <div class="field"><label>Подпись</label><input type="text" id="counter-label-${i}" placeholder="Проектов"></div>
+      </div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateCounters(d) {
+  setVal('counters-heading', d.heading || '');
+  const items = d.items || [];
+  for (let i = 0; i < 4; i++) {
+    const it = items[i] || {};
+    setVal('counter-value-' + i, it.value !== undefined ? String(it.value) : '');
+    setVal('counter-suffix-' + i, it.suffix || '');
+    setVal('counter-label-' + i, it.label || '');
+  }
+}
+
+function collectCounters() {
+  const items = [];
+  for (let i = 0; i < 4; i++) {
+    items.push({ value: getVal('counter-value-' + i), suffix: getVal('counter-suffix-' + i), label: getVal('counter-label-' + i) });
+  }
+  return { heading: getVal('counters-heading'), items };
+}
+
+// ── ABOUT ─────────────────────────────────────────────────────
+function buildAboutFacts() {
+  const c = document.getElementById('about-facts');
+  c.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">Факт ${i+1}</div>
+      <div class="field-row field-row-3">
+        <div class="field"><label>Иконка</label><input type="text" id="about-fact-icon-${i}" placeholder="🏆"></div>
+        <div class="field"><label>Заголовок</label><input type="text" id="about-fact-title-${i}" placeholder="Заголовок факта"></div>
+        <div class="field"><label>Подпись</label><input type="text" id="about-fact-label-${i}" placeholder="Пояснение"></div>
+      </div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateAbout(d) {
+  setVal('about-heading', d.heading || '');
+  setVal('about-text', d.text || '');
+  setVal('about-youtubeId', d.youtubeId || '');
+  setVal('about-videoLabel', d.videoLabel || '');
+  const facts = d.facts || [];
+  for (let i = 0; i < 4; i++) {
+    const f = facts[i] || {};
+    setVal('about-fact-icon-' + i, f.icon || '');
+    setVal('about-fact-title-' + i, f.title || '');
+    setVal('about-fact-label-' + i, f.label || '');
+  }
+}
+
+function collectAbout() {
+  const facts = [];
+  for (let i = 0; i < 4; i++) {
+    facts.push({ icon: getVal('about-fact-icon-' + i), title: getVal('about-fact-title-' + i), label: getVal('about-fact-label-' + i) });
+  }
+  return { heading: getVal('about-heading'), text: getVal('about-text'), youtubeId: getVal('about-youtubeId'), videoLabel: getVal('about-videoLabel'), facts };
+}
+
+// ── STEPS ─────────────────────────────────────────────────────
+function buildStepItems() {
+  const c = document.getElementById('steps-items');
+  c.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">Шаг ${i+1}</div>
+      <div class="field-row field-row-2">
+        <div class="field"><label>Иконка</label><input type="text" id="step-icon-${i}" placeholder="🔍"></div>
+        <div class="field"><label>Заголовок</label><input type="text" id="step-title-${i}" placeholder="Название шага"></div>
+      </div>
+      <div class="field"><label>Описание</label><textarea id="step-desc-${i}" rows="2" placeholder="Подробное описание шага"></textarea></div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateSteps(d) {
+  setVal('steps-heading', d.heading || '');
+  const steps = d.steps || [];
+  for (let i = 0; i < 5; i++) {
+    const s = steps[i] || {};
+    setVal('step-icon-' + i, s.icon || '');
+    setVal('step-title-' + i, s.title || '');
+    setVal('step-desc-' + i, s.desc || '');
+  }
+}
+
+function collectSteps() {
+  const steps = [];
+  for (let i = 0; i < 5; i++) {
+    steps.push({ icon: getVal('step-icon-' + i), title: getVal('step-title-' + i), desc: getVal('step-desc-' + i) });
+  }
+  return { heading: getVal('steps-heading'), steps };
+}
+
+// ── FAQ ───────────────────────────────────────────────────────
+function buildFaqItems() {
+  const c = document.getElementById('faq-items');
+  c.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">Вопрос ${i+1}</div>
+      <div class="field"><label>Вопрос</label><input type="text" id="faq-q-${i}" placeholder="Вопрос ${i+1}"></div>
+      <div class="field"><label>Ответ</label><textarea id="faq-a-${i}" rows="3" placeholder="Развёрнутый ответ…"></textarea></div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateFaq(d) {
+  setVal('faq-heading', d.heading || '');
+  const items = d.items || [];
+  for (let i = 0; i < 8; i++) {
+    const it = items[i] || {};
+    setVal('faq-q-' + i, it.q || '');
+    setVal('faq-a-' + i, it.a || '');
+  }
+}
+
+function collectFaq() {
+  const items = [];
+  for (let i = 0; i < 8; i++) {
+    items.push({ q: getVal('faq-q-' + i), a: getVal('faq-a-' + i) });
+  }
+  return { heading: getVal('faq-heading'), items };
+}
+
+// ── REVIEWS ──────────────────────────────────────────────────
+function buildReviewItems() {
+  const c = document.getElementById('reviews-items');
+  c.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">Отзыв ${i+1}</div>
+      <div class="field-row field-row-3">
+        <div class="field"><label>Автор</label><input type="text" id="review-author-${i}" placeholder="Имя Фамилия"></div>
+        <div class="field"><label>Дата</label><input type="text" id="review-date-${i}" placeholder="01.01.2024"></div>
+        <div class="field"><label>Рейтинг (1–5)</label><input type="number" id="review-rating-${i}" min="1" max="5" placeholder="5"></div>
+      </div>
+      <div class="field"><label>Текст отзыва</label><textarea id="review-text-${i}" rows="3" placeholder="Текст отзыва клиента…"></textarea></div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateReviews(d) {
+  setVal('reviews-heading', d.heading || '');
+  const items = d.items || [];
+  for (let i = 0; i < 6; i++) {
+    const it = items[i] || {};
+    setVal('review-author-' + i, it.author || '');
+    setVal('review-date-' + i, it.date || '');
+    setVal('review-rating-' + i, it.rating !== undefined ? String(it.rating) : '5');
+    setVal('review-text-' + i, it.text || '');
+  }
+}
+
+function collectReviews() {
+  const items = [];
+  for (let i = 0; i < 6; i++) {
+    items.push({ author: getVal('review-author-' + i), date: getVal('review-date-' + i), rating: parseInt(getVal('review-rating-' + i)) || 5, text: getVal('review-text-' + i) });
+  }
+  return { heading: getVal('reviews-heading'), items };
+}
+
+// ── PROJECTS ──────────────────────────────────────────────────
+function buildProjectItems() {
+  const c = document.getElementById('projects-items');
+  c.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">Проект ${i+1}</div>
+      <div class="field-row field-row-2">
+        <div class="field"><label>Заголовок</label><input type="text" id="proj-title-${i}" placeholder="Название проекта"></div>
+        <div class="field"><label>Стоимость</label><input type="text" id="proj-cost-${i}" placeholder="от 100 000 ₽"></div>
+      </div>
+      <div class="field"><label>Краткое описание</label><input type="text" id="proj-shortDesc-${i}" placeholder="Краткое описание проекта"></div>
+      <div class="field"><label>Полное описание</label><textarea id="proj-fullDesc-${i}" rows="3" placeholder="Полное описание проекта…"></textarea></div>
+      <div class="field"><label>Ссылка</label><input type="text" id="proj-link-${i}" placeholder="https://..."></div>
+      <div style="margin-top:10px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Фотографии</div>
+      <div class="field-row field-row-2">
+        <div class="field">
+          <label>Фото 1 (карточка)</label>
+          <div class="url-with-preview">
+            <input type="text" id="proj-photo-0-${i}" placeholder="https://..." oninput="updatePreview(this,'proj-photo-preview-0-${i}')">
+            <img id="proj-photo-preview-0-${i}" class="img-preview" alt="фото">
+          </div>
+        </div>
+        <div class="field">
+          <label>Фото 2</label>
+          <div class="url-with-preview">
+            <input type="text" id="proj-photo-1-${i}" placeholder="https://..." oninput="updatePreview(this,'proj-photo-preview-1-${i}')">
+            <img id="proj-photo-preview-1-${i}" class="img-preview" alt="фото">
+          </div>
+        </div>
+        <div class="field">
+          <label>Фото 3</label>
+          <div class="url-with-preview">
+            <input type="text" id="proj-photo-2-${i}" placeholder="https://..." oninput="updatePreview(this,'proj-photo-preview-2-${i}')">
+            <img id="proj-photo-preview-2-${i}" class="img-preview" alt="фото">
+          </div>
+        </div>
+        <div class="field">
+          <label>Фото 4</label>
+          <div class="url-with-preview">
+            <input type="text" id="proj-photo-3-${i}" placeholder="https://..." oninput="updatePreview(this,'proj-photo-preview-3-${i}')">
+            <img id="proj-photo-preview-3-${i}" class="img-preview" alt="фото">
+          </div>
+        </div>
+      </div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateProjects(d) {
+  setVal('projects-heading', d.heading || '');
+  const items = d.items || [];
+  for (let i = 0; i < 3; i++) {
+    const it = items[i] || {};
+    setVal('proj-title-' + i, it.title || '');
+    setVal('proj-shortDesc-' + i, it.shortDesc || '');
+    setVal('proj-fullDesc-' + i, it.fullDesc || '');
+    setVal('proj-cost-' + i, it.cost || '');
+    setVal('proj-link-' + i, it.link || '');
+    const photos = it.photos || [];
+    for (let p = 0; p < 4; p++) {
+      setVal('proj-photo-' + p + '-' + i, photos[p] || '');
+      if (photos[p]) triggerPreview('proj-photo-' + p + '-' + i, 'proj-photo-preview-' + p + '-' + i);
+    }
+  }
+}
+
+function collectProjects() {
+  const items = [];
+  for (let i = 0; i < 3; i++) {
+    const photos = [];
+    for (let p = 0; p < 4; p++) photos.push(getVal('proj-photo-' + p + '-' + i));
+    items.push({ title: getVal('proj-title-' + i), shortDesc: getVal('proj-shortDesc-' + i), fullDesc: getVal('proj-fullDesc-' + i), cost: getVal('proj-cost-' + i), link: getVal('proj-link-' + i), photos });
+  }
+  return { heading: getVal('projects-heading'), items };
+}
+
+// ── CTA ───────────────────────────────────────────────────────
+function populateCta(d) {
+  setVal('cta-kicker', d.kicker || '');
+  setVal('cta-heading', d.heading || '');
+  setVal('cta-subheading', d.subheading || '');
+  const badges = d.badges || [];
+  for (let i = 0; i < 4; i++) setVal('cta-badge-' + i, badges[i] || '');
+  setVal('cta-btnOrder', d.btnOrder || '');
+  setVal('cta-btnCall', d.btnCall || '');
+  setVal('cta-note', d.note || '');
+}
+
+function collectCta() {
+  const badges = [];
+  for (let i = 0; i < 4; i++) badges.push(getVal('cta-badge-' + i));
+  return { kicker: getVal('cta-kicker'), heading: getVal('cta-heading'), subheading: getVal('cta-subheading'), badges, btnOrder: getVal('cta-btnOrder'), btnCall: getVal('cta-btnCall'), note: getVal('cta-note') };
+}
+
+// ── FOOTER ────────────────────────────────────────────────────
+function buildFooterCatalog() {
+  const c = document.getElementById('footer-catalog-items');
+  c.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.style.padding = '10px 14px';
+    div.innerHTML = `
+      <div class="field-row field-row-2">
+        <div class="field"><label>Название ${i+1}</label><input type="text" id="footer-cat-name-${i}" placeholder="Пункт каталога"></div>
+        <div class="field"><label>Ссылка ${i+1}</label><input type="text" id="footer-cat-link-${i}" placeholder="/catalog/${i+1}"></div>
+      </div>`;
+    c.appendChild(div);
+  }
+}
+
+function buildFooterInfo() {
+  const c = document.getElementById('footer-info-items');
+  c.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.style.padding = '10px 14px';
+    div.innerHTML = `
+      <div class="field-row field-row-2">
+        <div class="field"><label>Название ${i+1}</label><input type="text" id="footer-info-name-${i}" placeholder="О компании"></div>
+        <div class="field"><label>Ссылка ${i+1}</label><input type="text" id="footer-info-link-${i}" placeholder="/about"></div>
+      </div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateFooter(d) {
+  setVal('footer-company', d.company || '');
+  setVal('footer-description', d.description || '');
+  setVal('footer-tg', d.tg || '');
+  setVal('footer-wa', d.wa || '');
+  setVal('footer-ig', d.ig || '');
+  setVal('footer-yt', d.yt || '');
+  setVal('footer-address', d.address || '');
+  setVal('footer-phone', d.phone || '');
+  setVal('footer-phoneHref', d.phoneHref || '');
+  setVal('footer-email', d.email || '');
+  setVal('footer-lat', d.lat || '');
+  setVal('footer-lng', d.lng || '');
+  setVal('footer-copyright', d.copyright || '');
+  setVal('footer-linkPolicy', d.linkPolicy || '');
+  setVal('footer-linkOffer', d.linkOffer || '');
+  const catalog = d.catalog || [];
+  for (let i = 0; i < 5; i++) {
+    const it = catalog[i] || {};
+    setVal('footer-cat-name-' + i, it.name || '');
+    setVal('footer-cat-link-' + i, it.link || '');
+  }
+  const info = d.info || [];
+  for (let i = 0; i < 4; i++) {
+    const it = info[i] || {};
+    setVal('footer-info-name-' + i, it.name || '');
+    setVal('footer-info-link-' + i, it.link || '');
+  }
+  const mgr = d.manager || {};
+  setVal('footer-mgr-name', mgr.name || '');
+  setVal('footer-mgr-position', mgr.position || '');
+  setVal('footer-mgr-phone', mgr.phone || '');
+  setVal('footer-mgr-phoneHref', mgr.phoneHref || '');
+  setVal('footer-mgr-tg', mgr.tg || '');
+  setVal('footer-mgr-viber', mgr.viber || '');
+  setVal('footer-mgr-photo', mgr.photo || '');
+  if (mgr.photo) triggerPreview('footer-mgr-photo', 'footer-mgr-photo-preview');
+}
+
+function collectFooter() {
+  const catalog = [];
+  for (let i = 0; i < 5; i++) catalog.push({ name: getVal('footer-cat-name-' + i), link: getVal('footer-cat-link-' + i) });
+  const info = [];
+  for (let i = 0; i < 4; i++) info.push({ name: getVal('footer-info-name-' + i), link: getVal('footer-info-link-' + i) });
+  return {
+    company: getVal('footer-company'), description: getVal('footer-description'),
+    tg: getVal('footer-tg'), wa: getVal('footer-wa'), ig: getVal('footer-ig'), yt: getVal('footer-yt'),
+    catalog, info,
+    address: getVal('footer-address'), phone: getVal('footer-phone'), phoneHref: getVal('footer-phoneHref'), email: getVal('footer-email'),
+    manager: {
+      name: getVal('footer-mgr-name'), position: getVal('footer-mgr-position'),
+      phone: getVal('footer-mgr-phone'), phoneHref: getVal('footer-mgr-phoneHref'),
+      tg: getVal('footer-mgr-tg'), viber: getVal('footer-mgr-viber'), photo: getVal('footer-mgr-photo')
+    },
+    lat: getVal('footer-lat'), lng: getVal('footer-lng'),
+    copyright: getVal('footer-copyright'), linkPolicy: getVal('footer-linkPolicy'), linkOffer: getVal('footer-linkOffer')
+  };
+}
+
+// ── INSTALLMENT ───────────────────────────────────────────────
+function buildInstallmentPeriods() {
+  const c = document.getElementById('installment-periods');
+  c.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">Период ${i+1}</div>
+      <div class="checkbox-row" style="margin-bottom:8px;">
+        <input type="checkbox" id="inst-period-show-${i}">
+        <label for="inst-period-show-${i}">Показывать этот период</label>
+      </div>
+      <div class="field-row field-row-3">
+        <div class="field"><label>Срок (месяцев)</label><input type="number" id="inst-months-${i}" placeholder="6" min="1"></div>
+        <div class="field"><label>Наценка (%)</label><input type="number" id="inst-markup-${i}" placeholder="0" min="0"></div>
+        <div class="field"><label>Подпись на кнопке</label><input type="text" id="inst-label-${i}" placeholder="6 месяцев"></div>
+      </div>
+      <div class="field-row field-row-2">
+        <div class="field" style="display:flex;align-items:flex-end;">
+          <div class="checkbox-row"><input type="checkbox" id="inst-reqDown-${i}"><label for="inst-reqDown-${i}">Взнос обязателен</label></div>
+        </div>
+        <div class="field"><label>Минимальный взнос (%)</label><input type="number" id="inst-minDown-${i}" placeholder="20" min="0" max="100"></div>
+      </div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateInstallment(d) {
+  setCheck('installment-show', d.show);
+  setVal('installment-heading', d.heading || '');
+  setVal('installment-note', d.note || '');
+  const periods = d.periods || [];
+  for (let i = 0; i < 4; i++) {
+    const p = periods[i] || {};
+    setCheck('inst-period-show-' + i, p.show !== false);
+    setVal('inst-months-' + i, p.months !== undefined ? String(p.months) : '');
+    setVal('inst-markup-' + i, p.markup !== undefined ? String(p.markup) : '');
+    setCheck('inst-reqDown-' + i, p.reqDown);
+    setVal('inst-minDown-' + i, p.minDown !== undefined ? String(p.minDown) : '');
+    setVal('inst-label-' + i, p.label || '');
+  }
+}
+
+function collectInstallment() {
+  const periods = [];
+  for (let i = 0; i < 4; i++) {
+    periods.push({
+      show: getCheck('inst-period-show-' + i),
+      months: parseFloat(getVal('inst-months-' + i)) || 0,
+      markup: parseFloat(getVal('inst-markup-' + i)) || 0,
+      reqDown: getCheck('inst-reqDown-' + i),
+      minDown: parseFloat(getVal('inst-minDown-' + i)) || 0,
+      label: getVal('inst-label-' + i)
+    });
+  }
+  return { show: getCheck('installment-show'), heading: getVal('installment-heading'), note: getVal('installment-note'), periods };
+}
+
+// ── ADVANTAGES ────────────────────────────────────────────────
+function buildAdvantageItems() {
+  const c = document.getElementById('advantages-items');
+  c.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const div = document.createElement('div');
+    div.className = 'repeater-item';
+    div.innerHTML = `
+      <div class="repeater-item-header">Пункт ${i+1}</div>
+      <div class="field-row field-row-2">
+        <div class="field"><label>Иконка</label><input type="text" id="adv-icon-${i}" placeholder="🛡️"></div>
+        <div class="field"><label>Надпись</label><input type="text" id="adv-label-${i}" placeholder="Гарантия качества"></div>
+      </div>`;
+    c.appendChild(div);
+  }
+}
+
+function populateAdvantages(d) {
+  setVal('advantages-heading', d.heading || '');
+  setVal('advantages-interval', d.interval !== undefined ? String(d.interval) : '');
+  const items = d.items || [];
+  for (let i = 0; i < 8; i++) {
+    const it = items[i] || {};
+    setVal('adv-icon-' + i, it.icon || '');
+    setVal('adv-label-' + i, it.label || '');
+  }
+}
+
+function collectAdvantages() {
+  const items = [];
+  for (let i = 0; i < 8; i++) {
+    items.push({ icon: getVal('adv-icon-' + i), label: getVal('adv-label-' + i) });
+  }
+  return { heading: getVal('advantages-heading'), interval: parseInt(getVal('advantages-interval')) || 1500, items };
+}
+
+// ── ESTIMATE ──────────────────────────────────────────────────
+function populateEstimate(d) {
+  setVal('estimate-discountHours', d.discountHours !== undefined ? String(d.discountHours) : '');
+  setVal('estimate-validDays', d.validDays !== undefined ? String(d.validDays) : '');
+  const vm = document.getElementById('estimate-viewMode');
+  if (d.viewMode) vm.value = d.viewMode;
+  setCheck('estimate-showTotals', d.showTotals !== false);
+  setVal('estimate-discountExpired', d.discountExpired || '');
+  setVal('estimate-offerExpired', d.offerExpired || '');
+}
+
+function collectEstimate() {
+  return {
+    discountHours: parseInt(getVal('estimate-discountHours')) || 0,
+    validDays: parseInt(getVal('estimate-validDays')) || 0,
+    viewMode: document.getElementById('estimate-viewMode').value,
+    showTotals: getCheck('estimate-showTotals'),
+    discountExpired: getVal('estimate-discountExpired'),
+    offerExpired: getVal('estimate-offerExpired')
+  };
+}
+
+// ── SAVE ─────────────────────────────────────────────────────
+const BLOCK_COLLECTORS = {
+  theme: collectTheme,
+  banner: collectBanner,
+  counters: collectCounters,
+  about: collectAbout,
+  steps: collectSteps,
+  faq: collectFaq,
+  reviews: collectReviews,
+  projects: collectProjects,
+  cta: collectCta,
+  footer: collectFooter,
+  installment: collectInstallment,
+  advantages: collectAdvantages,
+  estimate: collectEstimate
+};
+
+const BLOCK_NAMES_RU = {
+  theme: 'Тема', banner: 'Баннер', counters: 'Счётчики', about: 'О компании',
+  steps: 'Этапы работы', faq: 'FAQ', reviews: 'Отзывы', projects: 'Проекты',
+  cta: 'CTA', footer: 'Футер', installment: 'Рассрочка', advantages: 'Гарантии',
+  estimate: 'Смета'
+};
+
+async function saveBlock(blockKey) {
+  if (!webappUrl) { showToast('Сначала подключитесь к скрипту', 'error'); return; }
+  const collector = BLOCK_COLLECTORS[blockKey];
+  if (!collector) { showToast('Неизвестный блок: ' + blockKey, 'error'); return; }
+
+  const data = collector();
+  const msgEl = document.getElementById('save-msg-' + blockKey);
+  if (msgEl) { msgEl.textContent = 'Сохраняем…'; msgEl.className = 'save-msg'; }
+
+  try {
+    const payload = JSON.stringify({ action: 'saveBlock', block: BLOCK_NAMES_RU[blockKey] || blockKey, data });
+    await fetch(webappUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload
+    });
+    // no-cors: response is opaque, assume success
+    if (msgEl) { msgEl.textContent = 'Сохранено ✅'; msgEl.className = 'save-msg ok'; }
+    showToast('Блок «' + (BLOCK_NAMES_RU[blockKey] || blockKey) + '» сохранён ✅', 'success');
+    setTimeout(() => { if (msgEl) { msgEl.textContent = ''; msgEl.className = 'save-msg'; } }, 4000);
+  } catch (err) {
+    if (msgEl) { msgEl.textContent = 'Ошибка: ' + err.message; msgEl.className = 'save-msg err'; }
+    showToast('Ошибка сохранения: ' + err.message, 'error');
+  }
+}
+
+// ── BUILD REPEATERS ───────────────────────────────────────────
+function buildRepeaters() {
+  buildBannerSlides();
+  buildCounterItems();
+  buildAboutFacts();
+  buildStepItems();
+  buildFaqItems();
+  buildReviewItems();
+  buildProjectItems();
+  buildFooterCatalog();
+  buildFooterInfo();
+  buildInstallmentPeriods();
+  buildAdvantageItems();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+function setCheck(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (typeof val === 'string') el.checked = val === 'да' || val === 'true' || val === '1';
+  else el.checked = !!val;
+}
+function getCheck(id) {
+  const el = document.getElementById(id);
+  return el ? el.checked : false;
+}
+
+function setColorField(id, val) {
+  const textEl = document.getElementById(id);
+  const colorEl = document.getElementById(id + '-c');
+  if (!val) return;
+  if (textEl) textEl.value = val;
+  if (colorEl && isValidHex(val)) colorEl.value = val;
+}
+
+function syncColorToText(colorInput, textId) {
+  const el = document.getElementById(textId);
+  if (el) el.value = colorInput.value;
+}
+function syncTextToColor(textInput, colorId) {
+  const val = textInput.value.trim();
+  if (isValidHex(val)) {
+    const el = document.getElementById(colorId);
+    if (el) el.value = val;
+  }
+}
+function isValidHex(v) { return /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(v); }
+
+function updatePreview(input, previewId) {
+  const img = document.getElementById(previewId);
+  if (!img) return;
+  const url = input.value.trim();
+  if (url) {
+    img.src = url;
+    img.classList.add('visible');
+    img.onerror = () => img.classList.remove('visible');
+  } else {
+    img.classList.remove('visible');
+  }
+}
+function triggerPreview(inputId, previewId) {
+  const el = document.getElementById(inputId);
+  if (el) updatePreview(el, previewId);
+}
+
+function setStatus(state, msg) {
+  const el = document.getElementById('conn-status');
+  el.textContent = msg;
+  el.className = 'sidebar-status';
+  if (state === 'connected') el.classList.add('connected');
+  else if (state === 'error') el.classList.add('error');
+}
+
+function showLoading(on) {
+  document.getElementById('loading-overlay').classList.toggle('show', on);
+}
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(() => { requestAnimationFrame(() => t.classList.add('show')); });
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 250);
+  }, 3500);
+}
+</script>
+</body>
+</html>

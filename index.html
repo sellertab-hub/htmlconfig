@@ -929,6 +929,7 @@
           <label>Тип сметы</label>
           <select id="estimate-viewMode">
             <option value="list">Список</option>
+            <option value="list-group-total">Список с итогом по группам</option>
             <option value="table">Таблица</option>
             <option value="table-photo">Таблица с фото</option>
           </select>
@@ -1096,21 +1097,17 @@ function populateTheme(d) {
 }
 
 function collectTheme() {
-  const cssVars = {};
+  const data = {};
   CSS_VAR_IDS.forEach(v => {
     const id = cssVarToId(v);
     const el = document.getElementById(id);
-    if (el) cssVars[v.startsWith('--') ? v : '--' + v] = el.value;
+    if (el) data[v.startsWith('--') ? v : '--' + v] = el.value;
   });
-  return {
-    cssVars,
-    other: {
-      'font-family': getVal('css-font-family'),
-      'font-size-base': getVal('css-font-size-base')
-    },
-    logo: getVal('theme-logo'),
-    logoHref: getVal('theme-logoHref')
-  };
+  data['font-family']    = getVal('css-font-family');
+  data['font-size-base'] = getVal('css-font-size-base');
+  data['logo']           = getVal('theme-logo');
+  data['logoHref']       = getVal('theme-logoHref');
+  return data;
 }
 
 // ── BANNER ───────────────────────────────────────────────────
@@ -1147,15 +1144,14 @@ function populateBanner(d) {
 }
 
 function collectBanner() {
-  const slides = [];
-  for (let i = 0; i < 3; i++) {
-    slides.push({
-      title: getVal('banner-title-' + i),
-      img: getVal('banner-img-' + i),
-      link: getVal('banner-link-' + i)
-    });
+  const data = {};
+  for (let i = 1; i <= 3; i++) {
+    const j = i - 1;
+    data[`Слайд ${i} — Заголовок`]     = getVal(`banner-title-${j}`);
+    data[`Слайд ${i} — URL фото`]      = getVal(`banner-img-${j}`);
+    data[`Слайд ${i} — Ссылка (клик)`] = getVal(`banner-link-${j}`);
   }
-  return { slides };
+  return data;
 }
 
 // ── COUNTERS ─────────────────────────────────────────────────
@@ -1188,11 +1184,14 @@ function populateCounters(d) {
 }
 
 function collectCounters() {
-  const items = [];
-  for (let i = 0; i < 4; i++) {
-    items.push({ value: getVal('counter-value-' + i), suffix: getVal('counter-suffix-' + i), label: getVal('counter-label-' + i) });
+  const data = { 'Заголовок секции': getVal('counters-heading') };
+  for (let i = 1; i <= 4; i++) {
+    const j = i - 1;
+    data[`Счётчик ${i} — Число`]   = getVal(`counter-value-${j}`);
+    data[`Счётчик ${i} — Суффикс`] = getVal(`counter-suffix-${j}`);
+    data[`Счётчик ${i} — Подпись`] = getVal(`counter-label-${j}`);
   }
-  return { heading: getVal('counters-heading'), items };
+  return data;
 }
 
 // ── ABOUT ─────────────────────────────────────────────────────
@@ -1228,11 +1227,19 @@ function populateAbout(d) {
 }
 
 function collectAbout() {
-  const facts = [];
-  for (let i = 0; i < 4; i++) {
-    facts.push({ icon: getVal('about-fact-icon-' + i), title: getVal('about-fact-title-' + i), label: getVal('about-fact-label-' + i) });
+  const data = {
+    'Заголовок секции':  getVal('about-heading'),
+    'Текст описания':    getVal('about-text'),
+    'ID YouTube-видео':  getVal('about-youtubeId'),
+    'Подпись под видео': getVal('about-videoLabel'),
+  };
+  for (let i = 1; i <= 4; i++) {
+    const j = i - 1;
+    data[`Факт ${i} — Иконка`]    = getVal(`about-fact-icon-${j}`);
+    data[`Факт ${i} — Заголовок`] = getVal(`about-fact-title-${j}`);
+    data[`Факт ${i} — Подпись`]   = getVal(`about-fact-label-${j}`);
   }
-  return { heading: getVal('about-heading'), text: getVal('about-text'), youtubeId: getVal('about-youtubeId'), videoLabel: getVal('about-videoLabel'), facts };
+  return data;
 }
 
 // ── STEPS ─────────────────────────────────────────────────────
@@ -1265,11 +1272,14 @@ function populateSteps(d) {
 }
 
 function collectSteps() {
-  const steps = [];
-  for (let i = 0; i < 5; i++) {
-    steps.push({ icon: getVal('step-icon-' + i), title: getVal('step-title-' + i), desc: getVal('step-desc-' + i) });
+  const data = { 'Заголовок секции': getVal('steps-heading') };
+  for (let i = 1; i <= 5; i++) {
+    const j = i - 1;
+    data[`Шаг ${i} — Иконка`]    = getVal(`step-icon-${j}`);
+    data[`Шаг ${i} — Заголовок`] = getVal(`step-title-${j}`);
+    data[`Шаг ${i} — Описание`]  = getVal(`step-desc-${j}`);
   }
-  return { heading: getVal('steps-heading'), steps };
+  return data;
 }
 
 // ── FAQ ───────────────────────────────────────────────────────
@@ -1298,11 +1308,13 @@ function populateFaq(d) {
 }
 
 function collectFaq() {
-  const items = [];
-  for (let i = 0; i < 8; i++) {
-    items.push({ q: getVal('faq-q-' + i), a: getVal('faq-a-' + i) });
+  const data = { 'Заголовок секции': getVal('faq-heading') };
+  for (let i = 1; i <= 8; i++) {
+    const j = i - 1;
+    data[`Вопрос ${i}`] = getVal(`faq-q-${j}`);
+    data[`Ответ ${i}`]  = getVal(`faq-a-${j}`);
   }
-  return { heading: getVal('faq-heading'), items };
+  return data;
 }
 
 // ── REVIEWS ──────────────────────────────────────────────────
@@ -1337,11 +1349,15 @@ function populateReviews(d) {
 }
 
 function collectReviews() {
-  const items = [];
-  for (let i = 0; i < 6; i++) {
-    items.push({ author: getVal('review-author-' + i), date: getVal('review-date-' + i), rating: parseInt(getVal('review-rating-' + i)) || 5, text: getVal('review-text-' + i) });
+  const data = { 'Заголовок секции': getVal('reviews-heading') };
+  for (let i = 1; i <= 6; i++) {
+    const j = i - 1;
+    data[`Отзыв ${i} — Автор`]   = getVal(`review-author-${j}`);
+    data[`Отзыв ${i} — Дата`]    = getVal(`review-date-${j}`);
+    data[`Отзыв ${i} — Рейтинг`] = getVal(`review-rating-${j}`);
+    data[`Отзыв ${i} — Текст`]   = getVal(`review-text-${j}`);
   }
-  return { heading: getVal('reviews-heading'), items };
+  return data;
 }
 
 // ── PROJECTS ──────────────────────────────────────────────────
@@ -1414,13 +1430,20 @@ function populateProjects(d) {
 }
 
 function collectProjects() {
-  const items = [];
-  for (let i = 0; i < 3; i++) {
-    const photos = [];
-    for (let p = 0; p < 4; p++) photos.push(getVal('proj-photo-' + p + '-' + i));
-    items.push({ title: getVal('proj-title-' + i), shortDesc: getVal('proj-shortDesc-' + i), fullDesc: getVal('proj-fullDesc-' + i), cost: getVal('proj-cost-' + i), link: getVal('proj-link-' + i), photos });
+  const data = { 'Заголовок секции': getVal('projects-heading') };
+  for (let i = 1; i <= 3; i++) {
+    const j = i - 1;
+    data[`Проект ${i} — Заголовок`]         = getVal(`proj-title-${j}`);
+    data[`Проект ${i} — Краткое описание`]  = getVal(`proj-shortDesc-${j}`);
+    data[`Проект ${i} — Полное описание`]   = getVal(`proj-fullDesc-${j}`);
+    data[`Проект ${i} — Стоимость`]         = getVal(`proj-cost-${j}`);
+    data[`Проект ${i} — Ссылка`]            = getVal(`proj-link-${j}`);
+    data[`Проект ${i} — Фото 1 (карточка)`] = getVal(`proj-photo-0-${j}`);
+    data[`Проект ${i} — Фото 2`]            = getVal(`proj-photo-1-${j}`);
+    data[`Проект ${i} — Фото 3`]            = getVal(`proj-photo-2-${j}`);
+    data[`Проект ${i} — Фото 4`]            = getVal(`proj-photo-3-${j}`);
   }
-  return { heading: getVal('projects-heading'), items };
+  return data;
 }
 
 // ── CTA ───────────────────────────────────────────────────────
@@ -1436,9 +1459,18 @@ function populateCta(d) {
 }
 
 function collectCta() {
-  const badges = [];
-  for (let i = 0; i < 4; i++) badges.push(getVal('cta-badge-' + i));
-  return { kicker: getVal('cta-kicker'), heading: getVal('cta-heading'), subheading: getVal('cta-subheading'), badges, btnOrder: getVal('cta-btnOrder'), btnCall: getVal('cta-btnCall'), note: getVal('cta-note') };
+  const data = {
+    'Кикер':                     getVal('cta-kicker'),
+    'Заголовок':                 getVal('cta-heading'),
+    'Подзаголовок':              getVal('cta-subheading'),
+    'Текст главной кнопки':      getVal('cta-btnOrder'),
+    'Текст кнопки звонка':       getVal('cta-btnCall'),
+    'Мелкий текст под кнопками': getVal('cta-note'),
+  };
+  for (let i = 1; i <= 4; i++) {
+    data[`Бейдж ${i}`] = getVal(`cta-badge-${i - 1}`);
+  }
+  return data;
 }
 
 // ── FOOTER ────────────────────────────────────────────────────
@@ -1514,23 +1546,41 @@ function populateFooter(d) {
 }
 
 function collectFooter() {
-  const catalog = [];
-  for (let i = 0; i < 5; i++) catalog.push({ name: getVal('footer-cat-name-' + i), link: getVal('footer-cat-link-' + i) });
-  const info = [];
-  for (let i = 0; i < 4; i++) info.push({ name: getVal('footer-info-name-' + i), link: getVal('footer-info-link-' + i) });
-  return {
-    company: getVal('footer-company'), description: getVal('footer-description'),
-    tg: getVal('footer-tg'), wa: getVal('footer-wa'), ig: getVal('footer-ig'), yt: getVal('footer-yt'),
-    catalog, info,
-    address: getVal('footer-address'), phone: getVal('footer-phone'), phoneHref: getVal('footer-phoneHref'), email: getVal('footer-email'),
-    manager: {
-      name: getVal('footer-mgr-name'), position: getVal('footer-mgr-position'),
-      phone: getVal('footer-mgr-phone'), phoneHref: getVal('footer-mgr-phoneHref'),
-      tg: getVal('footer-mgr-tg'), viber: getVal('footer-mgr-viber'), photo: getVal('footer-mgr-photo')
-    },
-    lat: getVal('footer-lat'), lng: getVal('footer-lng'),
-    copyright: getVal('footer-copyright'), linkPolicy: getVal('footer-linkPolicy'), linkOffer: getVal('footer-linkOffer')
+  const data = {
+    'Название компании':           getVal('footer-company'),
+    'Описание':                    getVal('footer-description'),
+    'Telegram':                    getVal('footer-tg'),
+    'WhatsApp':                    getVal('footer-wa'),
+    'Instagram':                   getVal('footer-ig'),
+    'YouTube':                     getVal('footer-yt'),
+    'Адрес':                       getVal('footer-address'),
+    'Телефон (отображение)':       getVal('footer-phone'),
+    'Телефон (ссылка)':            getVal('footer-phoneHref'),
+    'Email':                       getVal('footer-email'),
+    'Широта (lat)':                getVal('footer-lat'),
+    'Долгота (lng)':               getVal('footer-lng'),
+    'Копирайт':                    getVal('footer-copyright'),
+    'Ссылка «Политика»':           getVal('footer-linkPolicy'),
+    'Ссылка «Оферта»':             getVal('footer-linkOffer'),
+    'Менеджер — Имя':              getVal('footer-mgr-name'),
+    'Менеджер — Должность':        getVal('footer-mgr-position'),
+    'Менеджер — Телефон':          getVal('footer-mgr-phone'),
+    'Менеджер — Телефон (ссылка)': getVal('footer-mgr-phoneHref'),
+    'Менеджер — Telegram':         getVal('footer-mgr-tg'),
+    'Менеджер — Viber':            getVal('footer-mgr-viber'),
+    'Менеджер — Фото (URL)':       getVal('footer-mgr-photo'),
   };
+  for (let i = 1; i <= 5; i++) {
+    const j = i - 1;
+    data[`Каталог ${i} — Название`] = getVal(`footer-cat-name-${j}`);
+    data[`Каталог ${i} — Ссылка`]   = getVal(`footer-cat-link-${j}`);
+  }
+  for (let i = 1; i <= 4; i++) {
+    const j = i - 1;
+    data[`Инфо ${i} — Название`] = getVal(`footer-info-name-${j}`);
+    data[`Инфо ${i} — Ссылка`]   = getVal(`footer-info-link-${j}`);
+  }
+  return data;
 }
 
 // ── INSTALLMENT ───────────────────────────────────────────────
@@ -1578,18 +1628,21 @@ function populateInstallment(d) {
 }
 
 function collectInstallment() {
-  const periods = [];
-  for (let i = 0; i < 4; i++) {
-    periods.push({
-      show: getCheck('inst-period-show-' + i),
-      months: parseFloat(getVal('inst-months-' + i)) || 0,
-      markup: parseFloat(getVal('inst-markup-' + i)) || 0,
-      reqDown: getCheck('inst-reqDown-' + i),
-      minDown: parseFloat(getVal('inst-minDown-' + i)) || 0,
-      label: getVal('inst-label-' + i)
-    });
+  const data = {
+    'Показывать рассрочку':      getCheck('installment-show') ? 'да' : 'нет',
+    'Заголовок блока':           getVal('installment-heading'),
+    'Подпись под калькулятором': getVal('installment-note'),
+  };
+  for (let i = 1; i <= 4; i++) {
+    const j = i - 1;
+    data[`Период ${i} — Показывать`]            = document.getElementById(`inst-period-show-${j}`) && document.getElementById(`inst-period-show-${j}`).checked ? 'да' : 'нет';
+    data[`Период ${i} — Срок (месяцев)`]        = getVal(`inst-months-${j}`);
+    data[`Период ${i} — Наценка (%)`]           = getVal(`inst-markup-${j}`);
+    data[`Период ${i} — Взнос обязателен`]      = document.getElementById(`inst-reqDown-${j}`) && document.getElementById(`inst-reqDown-${j}`).checked ? 'да' : 'нет';
+    data[`Период ${i} — Минимальный взнос (%)`] = getVal(`inst-minDown-${j}`);
+    data[`Период ${i} — Подпись на кнопке`]     = getVal(`inst-label-${j}`);
   }
-  return { show: getCheck('installment-show'), heading: getVal('installment-heading'), note: getVal('installment-note'), periods };
+  return data;
 }
 
 // ── ADVANTAGES ────────────────────────────────────────────────
@@ -1621,11 +1674,16 @@ function populateAdvantages(d) {
 }
 
 function collectAdvantages() {
-  const items = [];
-  for (let i = 0; i < 8; i++) {
-    items.push({ icon: getVal('adv-icon-' + i), label: getVal('adv-label-' + i) });
+  const data = {
+    'Заголовок секции': getVal('advantages-heading'),
+    'Интервал (мс)':    getVal('advantages-interval'),
+  };
+  for (let i = 1; i <= 8; i++) {
+    const j = i - 1;
+    data[`Пункт ${i} — Иконка`]  = getVal(`adv-icon-${j}`);
+    data[`Пункт ${i} — Надпись`] = getVal(`adv-label-${j}`);
   }
-  return { heading: getVal('advantages-heading'), interval: parseInt(getVal('advantages-interval')) || 1500, items };
+  return data;
 }
 
 // ── ESTIMATE ──────────────────────────────────────────────────
@@ -1640,13 +1698,21 @@ function populateEstimate(d) {
 }
 
 function collectEstimate() {
+  const modeEl = document.getElementById('estimate-viewMode');
+  const modeValue = modeEl ? modeEl.value : 'list';
+  const modeToRu = {
+    'list':             'список',
+    'list-group-total': 'список с итогом по группам',
+    'table':            'таблица',
+    'table-photo':      'таблица с фото',
+  };
   return {
-    discountHours: parseInt(getVal('estimate-discountHours')) || 0,
-    validDays: parseInt(getVal('estimate-validDays')) || 0,
-    viewMode: document.getElementById('estimate-viewMode').value,
-    showTotals: getCheck('estimate-showTotals'),
-    discountExpired: getVal('estimate-discountExpired'),
-    offerExpired: getVal('estimate-offerExpired')
+    'Часов действия скидки':      getVal('estimate-discountHours'),
+    'Дней действия КП':           getVal('estimate-validDays'),
+    'Тип сметы':                  modeToRu[modeValue] || 'список',
+    'Показывать итого':           getCheck('estimate-showTotals') ? 'да' : 'нет',
+    'Текст когда скидка истекла': getVal('estimate-discountExpired'),
+    'Текст когда КП истёк':       getVal('estimate-offerExpired'),
   };
 }
 

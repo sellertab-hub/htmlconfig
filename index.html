@@ -1833,6 +1833,7 @@ function buildAboutFacts() {
 
 function populateAbout(d) {
   setVal('about-heading',    d.heading    || '');
+  setCheck('about-highlight', d.highlight || false);
   setVal('about-text',       d.text       || '');
   setVal('about-youtubeId',  d.youtubeId  || '');
   setVal('about-videoLabel', d.videoLabel || '');
@@ -1857,6 +1858,7 @@ function collectAbout() {
   return {
     type:       'about',
     heading:    getVal('about-heading'),
+    highlight:  getCheck('about-highlight'),
     text:       getVal('about-text'),
     youtubeId:  getVal('about-youtubeId'),
     videoLabel: getVal('about-videoLabel'),
@@ -1884,6 +1886,7 @@ function buildStepItems() {
 
 function populateSteps(d) {
   setVal('steps-heading', d.heading || '');
+  setCheck('steps-highlight', d.highlight || false);
   var steps = d.steps || [];
   for (var i = 0; i < 5; i++) {
     var s = steps[i] || {};
@@ -1902,7 +1905,8 @@ function collectSteps() {
       desc:  getVal('step-desc-'  + i),
     });
   }
-  return { type: 'steps', heading: getVal('steps-heading'), steps: steps };
+  return { type: 'steps', heading: getVal('steps-heading'),
+    highlight: getCheck('steps-highlight'), steps: steps };
 }
 
 // ── FAQ ───────────────────────────────────────────────────────
@@ -1922,6 +1926,7 @@ function buildFaqItems() {
 
 function populateFaq(d) {
   setVal('faq-heading', d.heading || '');
+  setCheck('faq-highlight', d.highlight || false);
   var items = d.items || [];
   for (var i = 0; i < 8; i++) {
     var it = items[i] || {};
@@ -1937,7 +1942,8 @@ function collectFaq() {
     var a = getVal('faq-a-' + i);
     if (q || a) items.push({ q: q, a: a });
   }
-  return { type: 'faq', heading: getVal('faq-heading'), items: items };
+  return { type: 'faq', heading: getVal('faq-heading'),
+    highlight: getCheck('faq-highlight'), items: items };
 }
 
 // ── REVIEWS ──────────────────────────────────────────────────
@@ -1961,6 +1967,7 @@ function buildReviewItems() {
 
 function populateReviews(d) {
   setVal('reviews-heading', d.heading || '');
+  setCheck('reviews-highlight', d.highlight || false);
   var items = d.items || [];
   for (var i = 0; i < 6; i++) {
     var it = items[i] || {};
@@ -1985,7 +1992,8 @@ function collectReviews() {
       });
     }
   }
-  return { type: 'reviews', heading: getVal('reviews-heading'), items: items };
+  return { type: 'reviews', heading: getVal('reviews-heading'),
+    highlight: getCheck('reviews-highlight'), items: items };
 }
 
 // ── PROJECTS ──────────────────────────────────────────────────
@@ -2021,6 +2029,7 @@ function buildProjectItems() {
 
 function populateProjects(d) {
   setVal('projects-heading', d.heading || '');
+  setCheck('projects-highlight', d.highlight || false);
   var items = d.items || [];
   for (var i = 0; i < 3; i++) {
     var it = items[i] || {};
@@ -2054,7 +2063,8 @@ function collectProjects() {
       });
     }
   }
-  return { type: 'projects', heading: getVal('projects-heading'), items: items };
+  return { type: 'projects', heading: getVal('projects-heading'),
+    highlight: getCheck('projects-highlight'), items: items };
 }
 
 // ── CTA ───────────────────────────────────────────────────────
@@ -2234,6 +2244,7 @@ function buildInstallmentPeriods() {
 function populateInstallment(d) {
   setCheck('installment-show',    d.show !== false);
   setVal('installment-heading',   d.heading || '');
+  setCheck('installment-highlight', d.highlight || false);
   setVal('installment-note',      d.note    || '');
   var periods = d.periods || [];
   for (var i = 0; i < 4; i++) {
@@ -2263,6 +2274,7 @@ function collectInstallment() {
     type:    'installment',
     show:    getCheck('installment-show'),
     heading: getVal('installment-heading'),
+    highlight: getCheck('installment-highlight'),
     note:    getVal('installment-note'),
     periods: periods,
   };
@@ -2287,6 +2299,7 @@ function buildAdvantageItems() {
 
 function populateAdvantages(d) {
   setVal('advantages-heading',  d.heading  || '');
+  setCheck('advantages-highlight', d.highlight || false);
   setVal('advantages-interval', d.interval !== undefined ? String(d.interval) : '3000');
   var items = d.items || [];
   for (var i = 0; i < 8; i++) {
@@ -2306,6 +2319,7 @@ function collectAdvantages() {
   return {
     type:     'advantages',
     heading:  getVal('advantages-heading'),
+    highlight: getCheck('advantages-highlight'),
     interval: parseInt(getVal('advantages-interval')) || 3000,
     items:    items,
   };
@@ -2391,6 +2405,7 @@ function buildGalleryItems() {
 function populateGallery(d) {
   if (!d) return;
   setVal('gallery-heading', d.heading || '');
+  setCheck('gallery-highlight', d.highlight || false);
   var items = d.items || [];
   items.forEach(function(item, j) {
     if (j >= 6) return;
@@ -2406,13 +2421,15 @@ function collectGallery() {
     var img = getVal('gallery-img-' + i);
     if (img) items.push({ img: img, link: getVal('gallery-link-' + i) });
   }
-  return { type: 'gallery', heading: getVal('gallery-heading'), items: items };
+  return { type: 'gallery', heading: getVal('gallery-heading'),
+    highlight: getCheck('gallery-highlight'), items: items };
 }
 
 // ── TEXT-BLOCK ────────────────────────────────────────────────
 function populateTextBlock(d) {
   if (!d) return;
   setVal('textblock-heading',   d.heading || '');
+  setCheck('textblock-highlight', d.highlight || false);
   setVal('textblock-text',      d.text    || '');
   setCheck('textblock-alt',     d.alt     || false);
   setVal('textblock-btn-label', (d.button && d.button.label) || '');
@@ -2425,6 +2442,7 @@ function collectTextBlock() {
   var obj = {
     type:    'text-block',
     heading: getVal('textblock-heading'),
+    highlight: getCheck('textblock-highlight'),
     text:    getVal('textblock-text'),
     alt:     getCheck('textblock-alt'),
   };
@@ -2967,7 +2985,7 @@ document.addEventListener('keydown', function(e) {
       <div class="section-card" id="sec-about" data-section="about">
         <div class="section-title">О компании</div>
         <div class="card">
-          <div class="field"><label>Заголовок секции</label><input type="text" id="about-heading" placeholder="О нас"></div>
+          <div class="field-row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1"><label>Заголовок секции</label><input type="text" id="about-heading" placeholder="О нас"></div></div><div class="field" style="flex-shrink:0;padding-bottom:2px"><div class="checkbox-row"><input type="checkbox" id="about-highlight"><label for="about-highlight">Выделить</label></div></div></div>
           <div class="field"><label>Текст описания</label><textarea id="about-text" rows="4" placeholder="Описание компании..."></textarea></div>
           <div class="field-row field-row-2">
             <div class="field"><label>ID YouTube-видео</label><input type="text" id="about-youtubeId" placeholder="dQw4w9WgXcQ"></div>
@@ -2988,7 +3006,7 @@ document.addEventListener('keydown', function(e) {
       <div class="section-card" id="sec-steps" data-section="steps">
         <div class="section-title">Этапы работы</div>
         <div class="card">
-          <div class="field"><label>Заголовок секции</label><input type="text" id="steps-heading" placeholder="Как мы работаем"></div>
+          <div class="field-row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1"><label>Заголовок секции</label><input type="text" id="steps-heading" placeholder="Как мы работаем"></div></div><div class="field" style="flex-shrink:0;padding-bottom:2px"><div class="checkbox-row"><input type="checkbox" id="steps-highlight"><label for="steps-highlight">Выделить</label></div></div></div>
           <div class="repeater" id="steps-items" style="margin-top:12px;"></div>
           <div class="save-row">
             <button class="btn btn-primary btn-lg" onclick="saveBlock('steps')">Сохранить этапы</button>
@@ -3001,7 +3019,7 @@ document.addEventListener('keydown', function(e) {
       <div class="section-card" id="sec-faq" data-section="faq">
         <div class="section-title">FAQ</div>
         <div class="card">
-          <div class="field"><label>Заголовок секции</label><input type="text" id="faq-heading" placeholder="Вопросы и ответы"></div>
+          <div class="field-row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1"><label>Заголовок секции</label><input type="text" id="faq-heading" placeholder="Вопросы и ответы"></div></div><div class="field" style="flex-shrink:0;padding-bottom:2px"><div class="checkbox-row"><input type="checkbox" id="faq-highlight"><label for="faq-highlight">Выделить</label></div></div></div>
           <div class="repeater" id="faq-items" style="margin-top:12px;"></div>
           <div class="save-row">
             <button class="btn btn-primary btn-lg" onclick="saveBlock('faq')">Сохранить FAQ</button>
@@ -3014,7 +3032,7 @@ document.addEventListener('keydown', function(e) {
       <div class="section-card" id="sec-reviews" data-section="reviews">
         <div class="section-title">Отзывы</div>
         <div class="card">
-          <div class="field"><label>Заголовок секции</label><input type="text" id="reviews-heading" placeholder="Отзывы клиентов"></div>
+          <div class="field-row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1"><label>Заголовок секции</label><input type="text" id="reviews-heading" placeholder="Отзывы клиентов"></div></div><div class="field" style="flex-shrink:0;padding-bottom:2px"><div class="checkbox-row"><input type="checkbox" id="reviews-highlight"><label for="reviews-highlight">Выделить</label></div></div></div>
           <div class="repeater" id="reviews-items" style="margin-top:12px;"></div>
           <div class="save-row">
             <button class="btn btn-primary btn-lg" onclick="saveBlock('reviews')">Сохранить отзывы</button>
@@ -3027,7 +3045,7 @@ document.addEventListener('keydown', function(e) {
       <div class="section-card" id="sec-projects" data-section="projects">
         <div class="section-title">Проекты</div>
         <div class="card">
-          <div class="field"><label>Заголовок секции</label><input type="text" id="projects-heading" placeholder="Наши проекты"></div>
+          <div class="field-row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1"><label>Заголовок секции</label><input type="text" id="projects-heading" placeholder="Наши проекты"></div></div><div class="field" style="flex-shrink:0;padding-bottom:2px"><div class="checkbox-row"><input type="checkbox" id="projects-highlight"><label for="projects-highlight">Выделить</label></div></div></div>
           <div class="repeater" id="projects-items" style="margin-top:12px;"></div>
           <div class="save-row">
             <button class="btn btn-primary btn-lg" onclick="saveBlock('projects')">Сохранить проекты</button>
@@ -3138,7 +3156,7 @@ document.addEventListener('keydown', function(e) {
         <div class="card">
           <div class="checkbox-row"><input type="checkbox" id="installment-show"><label for="installment-show">Показывать блок рассрочки</label></div>
           <div class="field-row field-row-2" style="margin-top:12px;">
-            <div class="field"><label>Заголовок блока</label><input type="text" id="installment-heading" placeholder="Рассрочка"></div>
+            <div class="field-row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1"><label>Заголовок блока</label><input type="text" id="installment-heading" placeholder="Рассрочка"></div></div><div class="field" style="flex-shrink:0;padding-bottom:2px"><div class="checkbox-row"><input type="checkbox" id="installment-highlight"><label for="installment-highlight">Выделить</label></div></div></div>
             <div class="field"><label>Подпись под калькулятором</label><input type="text" id="installment-note" placeholder="Без переплаты"></div>
           </div>
           <div class="card-title" style="margin:12px 0 10px;"><span>📆</span> Периоды (4 шт.)</div>
@@ -3155,7 +3173,7 @@ document.addEventListener('keydown', function(e) {
         <div class="section-title">Гарантии</div>
         <div class="card">
           <div class="field-row field-row-2">
-            <div class="field"><label>Заголовок секции</label><input type="text" id="advantages-heading" placeholder="Наши гарантии"></div>
+            <div class="field-row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1"><label>Заголовок секции</label><input type="text" id="advantages-heading" placeholder="Наши гарантии"></div></div><div class="field" style="flex-shrink:0;padding-bottom:2px"><div class="checkbox-row"><input type="checkbox" id="advantages-highlight"><label for="advantages-highlight">Выделить</label></div></div></div>
             <div class="field"><label>Интервал анимации (мс)</label><input type="number" id="advantages-interval" placeholder="1500"></div>
           </div>
           <div class="card-title" style="margin:12px 0 10px;"><span>✅</span> Пункты (8 шт.)</div>
@@ -3228,7 +3246,7 @@ document.addEventListener('keydown', function(e) {
       <div class="section-card" id="sec-gallery" data-section="gallery">
         <div class="section-title">Галерея</div>
         <div class="card">
-          <div class="field"><label>Заголовок секции</label><input type="text" id="gallery-heading" placeholder="Наши работы"></div>
+          <div class="field-row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1"><label>Заголовок секции</label><input type="text" id="gallery-heading" placeholder="Наши работы"></div></div><div class="field" style="flex-shrink:0;padding-bottom:2px"><div class="checkbox-row"><input type="checkbox" id="gallery-highlight"><label for="gallery-highlight">Выделить</label></div></div></div>
           <div class="repeater" id="gallery-items" style="margin-top:12px;"></div>
           <div class="save-row">
             <button class="btn btn-primary btn-lg" onclick="saveBlock('gallery')">Сохранить галерею</button>
@@ -3241,7 +3259,7 @@ document.addEventListener('keydown', function(e) {
       <div class="section-card" id="sec-text-block" data-section="text-block">
         <div class="section-title">Текст-блок</div>
         <div class="card">
-          <div class="field"><label>Заголовок</label><input type="text" id="textblock-heading" placeholder="Заголовок блока"></div>
+          <div class="field-row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1"><label>Заголовок</label><input type="text" id="textblock-heading" placeholder="Заголовок блока"></div></div><div class="field" style="flex-shrink:0;padding-bottom:2px"><div class="checkbox-row"><input type="checkbox" id="textblock-highlight"><label for="textblock-highlight">Выделить</label></div></div></div>
           <div class="field"><label>Текст</label><textarea id="textblock-text" rows="5" placeholder="Содержимое текстового блока..."></textarea></div>
           <div class="checkbox-row"><input type="checkbox" id="textblock-alt"><label for="textblock-alt">Альтернативный фон</label></div>
           <div class="card-title" style="margin:12px 0 10px;"><span>🔘</span> Кнопка (опционально)</div>

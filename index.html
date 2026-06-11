@@ -1188,25 +1188,23 @@ function sendBlockToPreview(sectionKey) {
   if (!frame || !frame.contentWindow) return;
   var collector = BLOCK_COLLECTORS[sectionKey];
   if (!collector) return;
-  var flatData = collector();
-  var blockObj = toBlockObject(sectionKey, flatData);
-  if (!blockObj) return;
+  var blockObj = collector();
+  if (!blockObj || !blockObj.type) return;
   try {
     frame.contentWindow.postMessage({
       type: 'kp-config-update',
       blockType: blockObj.type,
       data: blockObj
     }, '*');
-  } catch(e) { /* cross-origin, will be caught by the template */ }
+  } catch(e) {}
 }
 
 function sendAllBlocksToPreview() {
   var frame = document.getElementById('preview-frame');
   if (!frame || !frame.contentWindow) return;
   Object.keys(BLOCK_COLLECTORS).forEach(function(key) {
-    var flatData = BLOCK_COLLECTORS[key]();
-    var blockObj = toBlockObject(key, flatData);
-    if (blockObj) {
+    var blockObj = BLOCK_COLLECTORS[key]();
+    if (blockObj && blockObj.type) {
       try {
         frame.contentWindow.postMessage({
           type: 'kp-config-update',
@@ -1471,7 +1469,13 @@ async function loadConfig() {
     if (json.ok === false) throw new Error(json.error || 'getConfig failed');
     populateAll(json.config || json);
     showToast('Конфигурация загружена ✅', 'success');
-    setTimeout(sendAllBlocksToPreview, 500);
+    // Даём iframe время загрузиться, потом отправляем блоки
+    var frame = document.getElementById('preview-frame');
+    if (frame && frame.contentDocument && frame.contentDocument.readyState === 'complete') {
+      setTimeout(sendAllBlocksToPreview, 200);
+    } else {
+      setTimeout(sendAllBlocksToPreview, 1200);
+    }
   } catch (err) {
     showToast('Ошибка загрузки: ' + err.message, 'error');
   } finally {

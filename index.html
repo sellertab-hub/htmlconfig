@@ -1515,17 +1515,22 @@ function populateTheme(d) {
 }
 
 function collectTheme() {
-  var data = {};
+  var cssVars = {};
   CSS_VAR_IDS.forEach(function(v) {
     var id = cssVarToId(v);
     var el = document.getElementById(id);
-    if (el) data[v.startsWith('--') ? v : '--' + v] = el.value;
+    if (el) cssVars[v.startsWith('--') ? v : '--' + v] = el.value;
   });
-  data['font-family']    = getVal('css-font-family');
-  data['font-size-base'] = getVal('css-font-size-base');
-  data['logo']           = getVal('theme-logo');
-  data['logoHref']       = getVal('theme-logoHref');
-  return data;
+  return {
+    type: 'theme',
+    cssVars: cssVars,
+    other: {
+      'font-family':    getVal('css-font-family'),
+      'font-size-base': getVal('css-font-size-base'),
+    },
+    logo:     getVal('theme-logo'),
+    logoHref: getVal('theme-logoHref'),
+  };
 }
 
 // ── BANNER ───────────────────────────────────────────────────
@@ -1552,21 +1557,22 @@ function populateBanner(d) {
   for (var i = 0; i < 3; i++) {
     var s = slides[i] || {};
     setVal('banner-title-' + i, s.title || '');
-    setVal('banner-img-' + i, s.img || '');
-    setVal('banner-link-' + i, s.link || '');
+    setVal('banner-img-'   + i, s.img   || '');
+    setVal('banner-link-'  + i, s.link  || '');
     if (s.img) triggerPreview('banner-img-' + i, 'banner-img-preview-' + i);
   }
 }
 
 function collectBanner() {
-  var data = {};
-  for (var i = 1; i <= 3; i++) {
-    var j = i - 1;
-    data['Слайд ' + i + ' — Заголовок']     = getVal('banner-title-' + j);
-    data['Слайд ' + i + ' — URL фото']      = getVal('banner-img-' + j);
-    data['Слайд ' + i + ' — Ссылка (клик)'] = getVal('banner-link-' + j);
+  var slides = [];
+  for (var i = 0; i < 3; i++) {
+    slides.push({
+      title: getVal('banner-title-' + i),
+      img:   getVal('banner-img-'   + i),
+      link:  getVal('banner-link-'  + i),
+    });
   }
-  return data;
+  return { type: 'banner', slides: slides };
 }
 
 // ── COUNTERS ─────────────────────────────────────────────────
@@ -1592,21 +1598,23 @@ function populateCounters(d) {
   var items = d.items || [];
   for (var i = 0; i < 4; i++) {
     var it = items[i] || {};
-    setVal('counter-value-' + i, it.value !== undefined ? String(it.value) : '');
+    setVal('counter-value-'  + i, it.value  !== undefined ? String(it.value)  : '');
     setVal('counter-suffix-' + i, it.suffix || '');
-    setVal('counter-label-' + i, it.label || '');
+    setVal('counter-label-'  + i, it.label  || '');
   }
 }
 
 function collectCounters() {
-  var data = { 'Заголовок секции': getVal('counters-heading') };
-  for (var i = 1; i <= 4; i++) {
-    var j = i - 1;
-    data['Счётчик ' + i + ' — Число']   = getVal('counter-value-' + j);
-    data['Счётчик ' + i + ' — Суффикс'] = getVal('counter-suffix-' + j);
-    data['Счётчик ' + i + ' — Подпись'] = getVal('counter-label-' + j);
+  var items = [];
+  for (var i = 0; i < 4; i++) {
+    var val = getVal('counter-value-' + i);
+    items.push({
+      value:  val !== '' ? parseFloat(val) || 0 : 0,
+      suffix: getVal('counter-suffix-' + i),
+      label:  getVal('counter-label-'  + i),
+    });
   }
-  return data;
+  return { type: 'counters', heading: getVal('counters-heading'), items: items };
 }
 
 // ── ABOUT ─────────────────────────────────────────────────────
@@ -1628,33 +1636,36 @@ function buildAboutFacts() {
 }
 
 function populateAbout(d) {
-  setVal('about-heading', d.heading || '');
-  setVal('about-text', d.text || '');
-  setVal('about-youtubeId', d.youtubeId || '');
+  setVal('about-heading',    d.heading    || '');
+  setVal('about-text',       d.text       || '');
+  setVal('about-youtubeId',  d.youtubeId  || '');
   setVal('about-videoLabel', d.videoLabel || '');
   var facts = d.facts || [];
   for (var i = 0; i < 4; i++) {
     var f = facts[i] || {};
-    setVal('about-fact-icon-' + i, f.icon || '');
+    setVal('about-fact-icon-'  + i, f.icon  || '');
     setVal('about-fact-title-' + i, f.title || '');
     setVal('about-fact-label-' + i, f.label || '');
   }
 }
 
 function collectAbout() {
-  var data = {
-    'Заголовок секции':  getVal('about-heading'),
-    'Текст описания':    getVal('about-text'),
-    'ID YouTube-видео':  getVal('about-youtubeId'),
-    'Подпись под видео': getVal('about-videoLabel'),
-  };
-  for (var i = 1; i <= 4; i++) {
-    var j = i - 1;
-    data['Факт ' + i + ' — Иконка']    = getVal('about-fact-icon-' + j);
-    data['Факт ' + i + ' — Заголовок'] = getVal('about-fact-title-' + j);
-    data['Факт ' + i + ' — Подпись']   = getVal('about-fact-label-' + j);
+  var facts = [];
+  for (var i = 0; i < 4; i++) {
+    facts.push({
+      icon:  getVal('about-fact-icon-'  + i),
+      title: getVal('about-fact-title-' + i),
+      label: getVal('about-fact-label-' + i),
+    });
   }
-  return data;
+  return {
+    type:       'about',
+    heading:    getVal('about-heading'),
+    text:       getVal('about-text'),
+    youtubeId:  getVal('about-youtubeId'),
+    videoLabel: getVal('about-videoLabel'),
+    facts:      facts,
+  };
 }
 
 // ── STEPS ─────────────────────────────────────────────────────
@@ -1680,21 +1691,22 @@ function populateSteps(d) {
   var steps = d.steps || [];
   for (var i = 0; i < 5; i++) {
     var s = steps[i] || {};
-    setVal('step-icon-' + i, s.icon || '');
+    setVal('step-icon-'  + i, s.icon  || '');
     setVal('step-title-' + i, s.title || '');
-    setVal('step-desc-' + i, s.desc || '');
+    setVal('step-desc-'  + i, s.desc  || '');
   }
 }
 
 function collectSteps() {
-  var data = { 'Заголовок секции': getVal('steps-heading') };
-  for (var i = 1; i <= 5; i++) {
-    var j = i - 1;
-    data['Шаг ' + i + ' — Иконка']    = getVal('step-icon-' + j);
-    data['Шаг ' + i + ' — Заголовок'] = getVal('step-title-' + j);
-    data['Шаг ' + i + ' — Описание']  = getVal('step-desc-' + j);
+  var steps = [];
+  for (var i = 0; i < 5; i++) {
+    steps.push({
+      icon:  getVal('step-icon-'  + i),
+      title: getVal('step-title-' + i),
+      desc:  getVal('step-desc-'  + i),
+    });
   }
-  return data;
+  return { type: 'steps', heading: getVal('steps-heading'), steps: steps };
 }
 
 // ── FAQ ───────────────────────────────────────────────────────
@@ -1723,13 +1735,13 @@ function populateFaq(d) {
 }
 
 function collectFaq() {
-  var data = { 'Заголовок секции': getVal('faq-heading') };
-  for (var i = 1; i <= 8; i++) {
-    var j = i - 1;
-    data['Вопрос ' + i] = getVal('faq-q-' + j);
-    data['Ответ ' + i]  = getVal('faq-a-' + j);
+  var items = [];
+  for (var i = 0; i < 8; i++) {
+    var q = getVal('faq-q-' + i);
+    var a = getVal('faq-a-' + i);
+    if (q || a) items.push({ q: q, a: a });
   }
-  return data;
+  return { type: 'faq', heading: getVal('faq-heading'), items: items };
 }
 
 // ── REVIEWS ──────────────────────────────────────────────────
@@ -1757,22 +1769,27 @@ function populateReviews(d) {
   for (var i = 0; i < 6; i++) {
     var it = items[i] || {};
     setVal('review-author-' + i, it.author || '');
-    setVal('review-date-' + i, it.date || '');
+    setVal('review-date-'   + i, it.date   || '');
     setVal('review-rating-' + i, it.rating !== undefined ? String(it.rating) : '5');
-    setVal('review-text-' + i, it.text || '');
+    setVal('review-text-'   + i, it.text   || '');
   }
 }
 
 function collectReviews() {
-  var data = { 'Заголовок секции': getVal('reviews-heading') };
-  for (var i = 1; i <= 6; i++) {
-    var j = i - 1;
-    data['Отзыв ' + i + ' — Автор']   = getVal('review-author-' + j);
-    data['Отзыв ' + i + ' — Дата']    = getVal('review-date-' + j);
-    data['Отзыв ' + i + ' — Рейтинг'] = getVal('review-rating-' + j);
-    data['Отзыв ' + i + ' — Текст']   = getVal('review-text-' + j);
+  var items = [];
+  for (var i = 0; i < 6; i++) {
+    var author = getVal('review-author-' + i);
+    var text   = getVal('review-text-'   + i);
+    if (author || text) {
+      items.push({
+        author: author,
+        date:   getVal('review-date-'   + i),
+        rating: parseInt(getVal('review-rating-' + i)) || 5,
+        text:   text,
+      });
+    }
   }
-  return data;
+  return { type: 'reviews', heading: getVal('reviews-heading'), items: items };
 }
 
 // ── PROJECTS ──────────────────────────────────────────────────
@@ -1811,11 +1828,11 @@ function populateProjects(d) {
   var items = d.items || [];
   for (var i = 0; i < 3; i++) {
     var it = items[i] || {};
-    setVal('proj-title-' + i, it.title || '');
-    setVal('proj-shortDesc-' + i, it.shortDesc || '');
-    setVal('proj-fullDesc-' + i, it.fullDesc || '');
-    setVal('proj-cost-' + i, it.cost || '');
-    setVal('proj-link-' + i, it.link || '');
+    setVal('proj-title-'     + i, it.title     || '');
+    setVal('proj-shortDesc-' + i, it.shortDesc  || '');
+    setVal('proj-fullDesc-'  + i, it.fullDesc   || '');
+    setVal('proj-cost-'      + i, it.cost       || '');
+    setVal('proj-link-'      + i, it.link       || '');
     var photos = it.photos || [];
     for (var p = 0; p < 4; p++) {
       setVal('proj-photo-' + p + '-' + i, photos[p] || '');
@@ -1825,47 +1842,53 @@ function populateProjects(d) {
 }
 
 function collectProjects() {
-  var data = { 'Заголовок секции': getVal('projects-heading') };
-  for (var i = 1; i <= 3; i++) {
-    var j = i - 1;
-    data['Проект ' + i + ' — Заголовок']         = getVal('proj-title-' + j);
-    data['Проект ' + i + ' — Краткое описание']  = getVal('proj-shortDesc-' + j);
-    data['Проект ' + i + ' — Полное описание']   = getVal('proj-fullDesc-' + j);
-    data['Проект ' + i + ' — Стоимость']         = getVal('proj-cost-' + j);
-    data['Проект ' + i + ' — Ссылка']            = getVal('proj-link-' + j);
-    data['Проект ' + i + ' — Фото 1 (карточка)'] = getVal('proj-photo-0-' + j);
-    data['Проект ' + i + ' — Фото 2']            = getVal('proj-photo-1-' + j);
-    data['Проект ' + i + ' — Фото 3']            = getVal('proj-photo-2-' + j);
-    data['Проект ' + i + ' — Фото 4']            = getVal('proj-photo-3-' + j);
+  var items = [];
+  for (var i = 0; i < 3; i++) {
+    var title = getVal('proj-title-' + i);
+    var photos = [];
+    for (var p = 0; p < 4; p++) photos.push(getVal('proj-photo-' + p + '-' + i));
+    if (title) {
+      items.push({
+        title:     title,
+        shortDesc: getVal('proj-shortDesc-' + i),
+        fullDesc:  getVal('proj-fullDesc-'  + i),
+        cost:      getVal('proj-cost-'      + i),
+        link:      getVal('proj-link-'      + i),
+        photos:    photos,
+      });
+    }
   }
-  return data;
+  return { type: 'projects', heading: getVal('projects-heading'), items: items };
 }
 
 // ── CTA ───────────────────────────────────────────────────────
 function populateCta(d) {
-  setVal('cta-kicker', d.kicker || '');
-  setVal('cta-heading', d.heading || '');
+  setVal('cta-kicker',     d.kicker     || '');
+  setVal('cta-heading',    d.heading    || '');
   setVal('cta-subheading', d.subheading || '');
   var badges = d.badges || [];
   for (var i = 0; i < 4; i++) setVal('cta-badge-' + i, badges[i] || '');
   setVal('cta-btnOrder', d.btnOrder || '');
-  setVal('cta-btnCall', d.btnCall || '');
-  setVal('cta-note', d.note || '');
+  setVal('cta-btnCall',  d.btnCall  || '');
+  setVal('cta-note',     d.note     || '');
 }
 
 function collectCta() {
-  var data = {
-    'Кикер':                     getVal('cta-kicker'),
-    'Заголовок':                 getVal('cta-heading'),
-    'Подзаголовок':              getVal('cta-subheading'),
-    'Текст главной кнопки':      getVal('cta-btnOrder'),
-    'Текст кнопки звонка':       getVal('cta-btnCall'),
-    'Мелкий текст под кнопками': getVal('cta-note'),
-  };
-  for (var i = 1; i <= 4; i++) {
-    data['Бейдж ' + i] = getVal('cta-badge-' + (i - 1));
+  var badges = [];
+  for (var i = 0; i < 4; i++) {
+    var b = getVal('cta-badge-' + i);
+    if (b) badges.push(b);
   }
-  return data;
+  return {
+    type:       'cta',
+    kicker:     getVal('cta-kicker'),
+    heading:    getVal('cta-heading'),
+    subheading: getVal('cta-subheading'),
+    badges:     badges,
+    btnOrder:   getVal('cta-btnOrder'),
+    btnCall:    getVal('cta-btnCall'),
+    note:       getVal('cta-note'),
+  };
 }
 
 // ── FOOTER ────────────────────────────────────────────────────
@@ -1902,21 +1925,21 @@ function buildFooterInfo() {
 }
 
 function populateFooter(d) {
-  setVal('footer-company', d.company || '');
+  setVal('footer-company',     d.company     || '');
   setVal('footer-description', d.description || '');
-  setVal('footer-tg', d.tg || '');
-  setVal('footer-wa', d.wa || '');
-  setVal('footer-ig', d.ig || '');
-  setVal('footer-yt', d.yt || '');
-  setVal('footer-address', d.address || '');
-  setVal('footer-phone', d.phone || '');
-  setVal('footer-phoneHref', d.phoneHref || '');
-  setVal('footer-email', d.email || '');
-  setVal('footer-lat', d.lat || '');
-  setVal('footer-lng', d.lng || '');
-  setVal('footer-copyright', d.copyright || '');
-  setVal('footer-linkPolicy', d.linkPolicy || '');
-  setVal('footer-linkOffer', d.linkOffer || '');
+  setVal('footer-tg',          d.tg          || '');
+  setVal('footer-wa',          d.wa          || '');
+  setVal('footer-ig',          d.ig          || '');
+  setVal('footer-yt',          d.yt          || '');
+  setVal('footer-address',     d.address     || '');
+  setVal('footer-phone',       d.phone       || '');
+  setVal('footer-phoneHref',   d.phoneHref   || '');
+  setVal('footer-email',       d.email       || '');
+  setVal('footer-lat',         d.lat         || '');
+  setVal('footer-lng',         d.lng         || '');
+  setVal('footer-copyright',   d.copyright   || '');
+  setVal('footer-linkPolicy',  d.linkPolicy  || '');
+  setVal('footer-linkOffer',   d.linkOffer   || '');
   var catalog = d.catalog || [];
   for (var i = 0; i < 5; i++) {
     var it = catalog[i] || {};
@@ -1930,52 +1953,58 @@ function populateFooter(d) {
     setVal('footer-info-link-' + i, it2.link || '');
   }
   var mgr = d.manager || {};
-  setVal('footer-mgr-name', mgr.name || '');
-  setVal('footer-mgr-position', mgr.role || mgr.position || '');
-  setVal('footer-mgr-phone', mgr.phone || '');
+  setVal('footer-mgr-name',      mgr.name      || '');
+  setVal('footer-mgr-position',  mgr.role || mgr.position || '');
+  setVal('footer-mgr-phone',     mgr.phone     || '');
   setVal('footer-mgr-phoneHref', mgr.phoneHref || '');
-  setVal('footer-mgr-tg', mgr.tg || '');
-  setVal('footer-mgr-viber', mgr.wa || mgr.viber || '');
-  setVal('footer-mgr-photo', mgr.photo || '');
+  setVal('footer-mgr-tg',        mgr.tg        || '');
+  setVal('footer-mgr-viber',     mgr.wa || mgr.viber || '');
+  setVal('footer-mgr-photo',     mgr.photo     || '');
   if (mgr.photo) triggerPreview('footer-mgr-photo', 'footer-mgr-photo-preview');
 }
 
 function collectFooter() {
-  var data = {
-    'Название компании':           getVal('footer-company'),
-    'Описание':                    getVal('footer-description'),
-    'Telegram':                    getVal('footer-tg'),
-    'WhatsApp':                    getVal('footer-wa'),
-    'Instagram':                   getVal('footer-ig'),
-    'YouTube':                     getVal('footer-yt'),
-    'Адрес':                       getVal('footer-address'),
-    'Телефон (отображение)':       getVal('footer-phone'),
-    'Телефон (ссылка)':            getVal('footer-phoneHref'),
-    'Email':                       getVal('footer-email'),
-    'Широта (lat)':                getVal('footer-lat'),
-    'Долгота (lng)':               getVal('footer-lng'),
-    'Копирайт':                    getVal('footer-copyright'),
-    'Ссылка «Политика»':           getVal('footer-linkPolicy'),
-    'Ссылка «Оферта»':             getVal('footer-linkOffer'),
-    'Менеджер — Имя':              getVal('footer-mgr-name'),
-    'Менеджер — Должность':        getVal('footer-mgr-position'),
-    'Менеджер — Телефон':          getVal('footer-mgr-phone'),
-    'Менеджер — Телефон (ссылка)': getVal('footer-mgr-phoneHref'),
-    'Менеджер — Telegram':         getVal('footer-mgr-tg'),
-    'Менеджер — Viber':            getVal('footer-mgr-viber'),
-    'Менеджер — Фото (URL)':       getVal('footer-mgr-photo'),
+  var catalog = [];
+  for (var i = 0; i < 5; i++) {
+    var name = getVal('footer-cat-name-' + i);
+    var link = getVal('footer-cat-link-' + i);
+    if (name || link) catalog.push({ name: name, link: link });
+  }
+  var info = [];
+  for (var i = 0; i < 4; i++) {
+    var n2 = getVal('footer-info-name-' + i);
+    var l2 = getVal('footer-info-link-' + i);
+    if (n2 || l2) info.push({ name: n2, link: l2 });
+  }
+  return {
+    type:        'footer',
+    company:     getVal('footer-company'),
+    description: getVal('footer-description'),
+    tg:          getVal('footer-tg'),
+    wa:          getVal('footer-wa'),
+    ig:          getVal('footer-ig'),
+    yt:          getVal('footer-yt'),
+    catalog:     catalog,
+    info:        info,
+    address:     getVal('footer-address'),
+    phone:       getVal('footer-phone'),
+    phoneHref:   getVal('footer-phoneHref'),
+    email:       getVal('footer-email'),
+    lat:         getVal('footer-lat'),
+    lng:         getVal('footer-lng'),
+    copyright:   getVal('footer-copyright'),
+    linkPolicy:  getVal('footer-linkPolicy'),
+    linkOffer:   getVal('footer-linkOffer'),
+    manager: {
+      name:      getVal('footer-mgr-name'),
+      role:      getVal('footer-mgr-position'),
+      phone:     getVal('footer-mgr-phone'),
+      phoneHref: getVal('footer-mgr-phoneHref'),
+      tg:        getVal('footer-mgr-tg'),
+      wa:        getVal('footer-mgr-viber'),
+      photo:     getVal('footer-mgr-photo'),
+    },
   };
-  for (var i = 1; i <= 5; i++) {
-    var j = i - 1;
-    data['Каталог ' + i + ' — Название'] = getVal('footer-cat-name-' + j);
-    data['Каталог ' + i + ' — Ссылка']   = getVal('footer-cat-link-' + j);
-  }
-  for (var i = 1; i <= 4; i++) {
-    var j = i - 1;
-    data['Инфо ' + i + ' — Название'] = getVal('footer-info-name-' + j);
-    data['Инфо ' + i + ' — Ссылка']   = getVal('footer-info-link-' + j);
-  }
-  return data;
 }
 
 // ── INSTALLMENT ───────────────────────────────────────────────
@@ -2007,39 +2036,40 @@ function buildInstallmentPeriods() {
 }
 
 function populateInstallment(d) {
-  setCheck('installment-show', d.show);
-  setVal('installment-heading', d.heading || '');
-  setVal('installment-note', d.note || '');
+  setCheck('installment-show',    d.show !== false);
+  setVal('installment-heading',   d.heading || '');
+  setVal('installment-note',      d.note    || '');
   var periods = d.periods || [];
   for (var i = 0; i < 4; i++) {
     var p = periods[i] || {};
     setCheck('inst-period-show-' + i, p.show !== false);
-    setVal('inst-months-' + i, p.months !== undefined ? String(p.months) : '');
-    setVal('inst-markup-' + i, p.markup !== undefined ? String(p.markup) : '');
-    setCheck('inst-reqDown-' + i, p.reqDown);
-    setVal('inst-minDown-' + i, p.minDown !== undefined ? String(p.minDown) : '');
-    setVal('inst-label-' + i, p.label || '');
+    setVal('inst-months-'        + i, p.months  !== undefined ? String(p.months)  : '');
+    setVal('inst-markup-'        + i, p.markup  !== undefined ? String(p.markup)  : '');
+    setCheck('inst-reqDown-'     + i, p.reqDown);
+    setVal('inst-minDown-'       + i, p.minDown !== undefined ? String(p.minDown) : '');
+    setVal('inst-label-'         + i, p.label   || '');
   }
 }
 
 function collectInstallment() {
-  var data = {
-    'Показывать рассрочку':      getCheck('installment-show') ? 'да' : 'нет',
-    'Заголовок блока':           getVal('installment-heading'),
-    'Подпись под калькулятором': getVal('installment-note'),
-  };
-  for (var i = 1; i <= 4; i++) {
-    var j = i - 1;
-    var showEl = document.getElementById('inst-period-show-' + j);
-    var rdEl   = document.getElementById('inst-reqDown-' + j);
-    data['Период ' + i + ' — Показывать']            = (showEl && showEl.checked) ? 'да' : 'нет';
-    data['Период ' + i + ' — Срок (месяцев)']        = getVal('inst-months-' + j);
-    data['Период ' + i + ' — Наценка (%)']           = getVal('inst-markup-' + j);
-    data['Период ' + i + ' — Взнос обязателен']      = (rdEl && rdEl.checked) ? 'да' : 'нет';
-    data['Период ' + i + ' — Минимальный взнос (%)'] = getVal('inst-minDown-' + j);
-    data['Период ' + i + ' — Подпись на кнопке']     = getVal('inst-label-' + j);
+  var periods = [];
+  for (var i = 0; i < 4; i++) {
+    periods.push({
+      show:    getCheck('inst-period-show-' + i),
+      months:  parseInt(getVal('inst-months-'  + i)) || 0,
+      markup:  parseFloat(getVal('inst-markup-' + i)) || 0,
+      reqDown: getCheck('inst-reqDown-' + i),
+      minDown: parseFloat(getVal('inst-minDown-' + i)) || 0,
+      label:   getVal('inst-label-' + i),
+    });
   }
-  return data;
+  return {
+    type:    'installment',
+    show:    getCheck('installment-show'),
+    heading: getVal('installment-heading'),
+    note:    getVal('installment-note'),
+    periods: periods,
+  };
 }
 
 // ── ADVANTAGES ────────────────────────────────────────────────
@@ -2060,56 +2090,52 @@ function buildAdvantageItems() {
 }
 
 function populateAdvantages(d) {
-  setVal('advantages-heading', d.heading || '');
-  setVal('advantages-interval', d.interval !== undefined ? String(d.interval) : '');
+  setVal('advantages-heading',  d.heading  || '');
+  setVal('advantages-interval', d.interval !== undefined ? String(d.interval) : '3000');
   var items = d.items || [];
   for (var i = 0; i < 8; i++) {
     var it = items[i] || {};
-    setVal('adv-icon-' + i, it.icon || '');
+    setVal('adv-icon-'  + i, it.icon  || '');
     setVal('adv-label-' + i, it.label || '');
   }
 }
 
 function collectAdvantages() {
-  var data = {
-    'Заголовок секции': getVal('advantages-heading'),
-    'Интервал (мс)':    getVal('advantages-interval'),
-  };
-  for (var i = 1; i <= 8; i++) {
-    var j = i - 1;
-    data['Пункт ' + i + ' — Иконка']  = getVal('adv-icon-' + j);
-    data['Пункт ' + i + ' — Надпись'] = getVal('adv-label-' + j);
+  var items = [];
+  for (var i = 0; i < 8; i++) {
+    var icon  = getVal('adv-icon-'  + i);
+    var label = getVal('adv-label-' + i);
+    if (icon || label) items.push({ icon: icon, label: label });
   }
-  return data;
+  return {
+    type:     'advantages',
+    heading:  getVal('advantages-heading'),
+    interval: parseInt(getVal('advantages-interval')) || 3000,
+    items:    items,
+  };
 }
 
 // ── ESTIMATE ──────────────────────────────────────────────────
 function populateEstimate(d) {
   setVal('estimate-discountHours', d.discountHours !== undefined ? String(d.discountHours) : '');
-  setVal('estimate-validDays', d.validDays !== undefined ? String(d.validDays) : '');
+  setVal('estimate-validDays',     d.validDays     !== undefined ? String(d.validDays)     : '');
   var vm = document.getElementById('estimate-viewMode');
-  if (d.viewMode) vm.value = d.viewMode;
-  setCheck('estimate-showTotals', d.showTotals !== false);
+  if (vm && d.viewMode) vm.value = d.viewMode;
+  setCheck('estimate-showTotals',   d.showTotals !== false);
   setVal('estimate-discountExpired', d.discountExpired || '');
-  setVal('estimate-offerExpired', d.offerExpired || '');
+  setVal('estimate-offerExpired',    d.offerExpired    || '');
 }
 
 function collectEstimate() {
   var modeEl = document.getElementById('estimate-viewMode');
-  var modeValue = modeEl ? modeEl.value : 'list';
-  var modeToRu = {
-    'list':             'список',
-    'list-group-total': 'список с итогом по группам',
-    'table':            'таблица',
-    'table-photo':      'таблица с фото',
-  };
   return {
-    'Часов действия скидки':      getVal('estimate-discountHours'),
-    'Дней действия КП':           getVal('estimate-validDays'),
-    'Тип сметы':                  modeToRu[modeValue] || 'список',
-    'Показывать итого':           getCheck('estimate-showTotals') ? 'да' : 'нет',
-    'Текст когда скидка истекла': getVal('estimate-discountExpired'),
-    'Текст когда КП истёк':       getVal('estimate-offerExpired'),
+    type:            'estimate',
+    viewMode:        modeEl ? modeEl.value : 'list',
+    showTotals:      getCheck('estimate-showTotals'),
+    discountHours:   parseInt(getVal('estimate-discountHours')) || 0,
+    validDays:       parseInt(getVal('estimate-validDays'))     || 14,
+    discountExpired: getVal('estimate-discountExpired'),
+    offerExpired:    getVal('estimate-offerExpired'),
   };
 }
 
@@ -2118,19 +2144,18 @@ function buildGalleryItems() {
   var c = document.getElementById('gallery-items');
   c.innerHTML = '';
   for (var i = 0; i < 6; i++) {
-    var j = i; // 0-indexed
     var div = document.createElement('div');
     div.className = 'repeater-item';
     div.innerHTML =
       '<div class="repeater-item-header">Фото ' + (i+1) + '</div>' +
       '<div class="field"><label>URL фото</label>' +
         '<div class="url-with-preview">' +
-          '<input type="text" id="gallery-img-' + j + '" placeholder="https://..." oninput="updatePreview(this,\'gallery-img-preview-' + j + '\')">' +
-          '<img id="gallery-img-preview-' + j + '" class="img-preview" alt="фото">' +
+          '<input type="text" id="gallery-img-' + i + '" placeholder="https://..." oninput="updatePreview(this,\'gallery-img-preview-' + i + '\')">' +
+          '<img id="gallery-img-preview-' + i + '" class="img-preview" alt="фото">' +
         '</div>' +
       '</div>' +
       '<div class="field"><label>Ссылка (клик)</label>' +
-        '<input type="text" id="gallery-link-' + j + '" placeholder="пусто = лайтбокс, 0 = без действия, URL = ссылка">' +
+        '<input type="text" id="gallery-link-' + i + '" placeholder="пусто = лайтбокс, 0 = без действия, URL = ссылка">' +
       '</div>';
     c.appendChild(div);
   }
@@ -2142,40 +2167,42 @@ function populateGallery(d) {
   var items = d.items || [];
   items.forEach(function(item, j) {
     if (j >= 6) return;
-    setVal('gallery-img-' + j, item.img || '');
-    setVal('gallery-link-' + j, (item.link !== null && item.link !== undefined) ? item.link : '');
+    setVal('gallery-img-'  + j, item.img  || '');
+    setVal('gallery-link-' + j, item.link !== null && item.link !== undefined ? String(item.link) : '');
     if (item.img) triggerPreview('gallery-img-' + j, 'gallery-img-preview-' + j);
   });
 }
 
 function collectGallery() {
-  var data = { 'Заголовок секции': getVal('gallery-heading') };
-  for (var i = 1; i <= 6; i++) {
-    var j = i - 1;
-    data['Фото ' + i + ' — URL']          = getVal('gallery-img-' + j);
-    data['Фото ' + i + ' — Ссылка (клик)'] = getVal('gallery-link-' + j);
+  var items = [];
+  for (var i = 0; i < 6; i++) {
+    var img = getVal('gallery-img-' + i);
+    if (img) items.push({ img: img, link: getVal('gallery-link-' + i) });
   }
-  return data;
+  return { type: 'gallery', heading: getVal('gallery-heading'), items: items };
 }
 
 // ── TEXT-BLOCK ────────────────────────────────────────────────
 function populateTextBlock(d) {
   if (!d) return;
   setVal('textblock-heading',   d.heading || '');
-  setVal('textblock-text',      d.text || '');
-  setCheck('textblock-alt',     d.alt || false);
+  setVal('textblock-text',      d.text    || '');
+  setCheck('textblock-alt',     d.alt     || false);
   setVal('textblock-btn-label', (d.button && d.button.label) || '');
   setVal('textblock-btn-link',  (d.button && d.button.link)  || '');
 }
 
 function collectTextBlock() {
-  return {
-    'Заголовок':          getVal('textblock-heading'),
-    'Текст':              getVal('textblock-text'),
-    'Альтернативный фон': getCheck('textblock-alt') ? 'да' : 'нет',
-    'Кнопка — Текст':     getVal('textblock-btn-label'),
-    'Кнопка — Ссылка':    getVal('textblock-btn-link'),
+  var btnLabel = getVal('textblock-btn-label');
+  var btnLink  = getVal('textblock-btn-link');
+  var obj = {
+    type:    'text-block',
+    heading: getVal('textblock-heading'),
+    text:    getVal('textblock-text'),
+    alt:     getCheck('textblock-alt'),
   };
+  if (btnLabel || btnLink) obj.button = { label: btnLabel, link: btnLink };
+  return obj;
 }
 
 // ── BLOCK COLLECTORS ─────────────────────────────────────────

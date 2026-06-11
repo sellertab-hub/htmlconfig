@@ -1339,6 +1339,7 @@ var BLOCK_LABELS = {
   steps: 'Этапы работы', faq: 'FAQ', reviews: 'Отзывы', projects: 'Проекты',
   cta: 'CTA', footer: 'Футер', installment: 'Рассрочка', advantages: 'Гарантии',
   estimate: 'Смета', 'manager-popup': 'Попап менеджера', gallery: 'Галерея', 'text-block': 'Текст-блок',
+  'client-bar': 'Плашка клиента',
 };
 
 var BLOCK_POPULATORS = {
@@ -1358,6 +1359,7 @@ var BLOCK_POPULATORS = {
   'manager-popup': populateManagerPopup,
   gallery:      populateGallery,
   'text-block': populateTextBlock,
+  'client-bar': populateClientBar,
 };
 
 // ── DYNAMIC SIDEBAR ───────────────────────────────────────────
@@ -2357,6 +2359,23 @@ function collectEstimate() {
 }
 
 
+// ── CLIENT BAR ─────────────────────────────────────────────
+function populateClientBar(d) {
+  if (!d) return;
+  setCheck('cb-showLabel', d.showLabel !== false);
+  setVal('cb-label',      d.label    || 'Персональное коммерческое предложение для');
+  setCheck('cb-showName',  d.showName  !== false);
+}
+
+function collectClientBar() {
+  return {
+    type:      'client-bar',
+    showLabel: getCheck('cb-showLabel'),
+    label:     getVal('cb-label'),
+    showName:  getCheck('cb-showName'),
+  };
+}
+
 // ── MANAGER POPUP ─────────────────────────────────────────────
 function populateManagerPopup(d) {
   if (!d) return;
@@ -2468,6 +2487,7 @@ var BLOCK_COLLECTORS = {
   'manager-popup': collectManagerPopup,
   gallery:      collectGallery,
   'text-block': collectTextBlock,
+  'client-bar': collectClientBar,
 };
 
 var BLOCK_NAMES_RU = {
@@ -2475,6 +2495,7 @@ var BLOCK_NAMES_RU = {
   steps: 'Этапы работы', faq: 'FAQ', reviews: 'Отзывы', projects: 'Проекты',
   cta: 'CTA', footer: 'Футер', installment: 'Рассрочка', advantages: 'Гарантии',
   estimate: 'Смета', 'manager-popup': 'Попап менеджера', gallery: 'Галерея', 'text-block': 'Текст-блок',
+  'client-bar': 'Плашка клиента',
 };
 
 // ── SAVE ─────────────────────────────────────────────────────
@@ -3215,6 +3236,28 @@ document.addEventListener('keydown', function(e) {
           <div class="save-row">
             <button class="btn btn-primary btn-lg" onclick="saveBlock('estimate')">Сохранить смету</button>
             <span class="save-msg" id="save-msg-estimate"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ГАЛЕРЕЯ ─────────────────────────────────────── -->
+      <!-- ── ПОПАП МЕНЕДЖЕРА ─────────────────────────────── -->
+      <!-- ── ПЛАШКА КЛИЕНТА ─────────────────────────────────── -->
+      <div class="section-card" id="sec-client-bar" data-section="client-bar">
+        <div class="section-title">Плашка клиента</div>
+        <div class="card">
+          <div class="checkbox-row" style="margin-bottom:10px">
+            <input type="checkbox" id="cb-showLabel">
+            <label for="cb-showLabel">Показывать лейбл-строку</label>
+          </div>
+          <div class="field"><label>Текст лейбла</label><input type="text" id="cb-label" placeholder="Персональное коммерческое предложение для"></div>
+          <div class="checkbox-row" style="margin-top:4px">
+            <input type="checkbox" id="cb-showName">
+            <label for="cb-showName">Показывать имя клиента</label>
+          </div>
+          <div class="save-row">
+            <button class="btn btn-primary btn-lg" onclick="saveBlock('client-bar')">Сохранить</button>
+            <span class="save-msg" id="save-msg-client-bar"></span>
           </div>
         </div>
       </div>

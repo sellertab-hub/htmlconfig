@@ -826,22 +826,9 @@ function initDefaultBlockOrder() {
 // Move all static section-card divs into a hidden template store
 var _templateStore = null;
 function buildStaticTemplates() {
-  _templateStore = document.createElement('div');
-  _templateStore.id = 'static-template-store';
-  _templateStore.style.display = 'none';
-  document.body.appendChild(_templateStore);
-
-  // Find all section-cards that are direct children of body or any wrapper
-  // They are currently inside #static-sections-src (added below)
-  var src = document.getElementById('static-sections-src');
-  if (!src) return;
-  var cards = src.querySelectorAll('.section-card');
-  cards.forEach(function(card) {
-    // Rename id to sec-tpl-<type>
-    var type = card.dataset.section;
-    if (type) card.id = 'sec-tpl-' + type;
-    _templateStore.appendChild(card);
-  });
+  // No cloning needed. Sections are moved directly from #static-sections-src
+  // into #sections-container by buildSectionsPanel.
+  // Just ensure they have correct data-section attributes (they do, set in HTML).
 }
 
 // ── DEBOUNCE ──────────────────────────────────────────────────
@@ -1214,13 +1201,13 @@ async function loadConfig() {
 }
 
 // ── BLOCK ORDER STATE ────────────────────────────────────────
-// blockOrder — ordered array of { uid, type } — mirrors current sidebar order
-// Each uid is unique per instance (supports duplicate block types)
+// blockOrder — ordered array of { uid, type } — mirrors sidebar order
+// uid = unique per slot (supports duplicate types in future)
+// For now: one section DOM node per type, shared across duplicates
 var blockOrder = [];
 var _uidCounter = 0;
 function makeUid() { return 'b' + (++_uidCounter); }
 
-// Map of block type → human name (no emojis)
 var BLOCK_LABELS = {
   theme: 'Тема', banner: 'Баннер', counters: 'Счётчики', about: 'О компании',
   steps: 'Этапы работы', faq: 'FAQ', reviews: 'Отзывы', projects: 'Проекты',
@@ -1228,7 +1215,6 @@ var BLOCK_LABELS = {
   estimate: 'Смета', gallery: 'Галерея', 'text-block': 'Текст-блок',
 };
 
-// Map of block type → populate function
 var BLOCK_POPULATORS = {
   theme:        populateTheme,
   banner:       populateBanner,
@@ -1253,13 +1239,15 @@ function buildSidebarNav() {
   if (!list) return;
   list.innerHTML = '';
   blockOrder.forEach(function(entry, idx) {
+    var label = BLOCK_LABELS[entry.type] || entry.type;
     var btn = document.createElement('button');
     btn.className = 'nav-item' + (activeUid === entry.uid ? ' active' : '');
     btn.dataset.uid = entry.uid;
+    btn.dataset.type = entry.type;
     btn.draggable = true;
     btn.innerHTML =
       '<span class="nav-drag-handle" title="Перетащить">&#8942;&#8942;</span>' +
-      '<span class="nav-item-inner"><span>' + (BLOCK_LABELS[entry.type] || entry.type) + '</span></span>' +
+      '<span class="nav-item-inner"><span>' + label + '</span></span>' +
       '<span class="nav-item-controls">' +
         '<button class="nav-ctrl-btn" data-action="dup" data-uid="' + entry.uid + '" title="Дублировать">&#10064;</button>' +
         '<button class="nav-ctrl-btn" data-action="del" data-uid="' + entry.uid + '" title="Удалить">&#215;</button>' +
@@ -1268,17 +1256,13 @@ function buildSidebarNav() {
       if (e.target.closest('[data-action]')) return;
       showSectionByUid(entry.uid);
     });
-    // ctrl buttons
     btn.querySelectorAll('[data-action]').forEach(function(el) {
       el.addEventListener('click', function(e) {
         e.stopPropagation();
-        var action = el.dataset.action;
-        var uid = el.dataset.uid;
-        if (action === 'dup') duplicateBlock(uid);
-        if (action === 'del') deleteBlock(uid);
+        if (el.dataset.action === 'dup') duplicateBlock(entry.uid);
+        if (el.dataset.action === 'del') deleteBlock(entry.uid);
       });
     });
-    // drag events
     btn.addEventListener('dragstart', onNavDragStart);
     btn.addEventListener('dragover',  onNavDragOver);
     btn.addEventListener('dragleave', onNavDragLeave);
@@ -1329,40 +1313,64 @@ function closeAddDropdown() {
 // ── SECTIONS PANEL ────────────────────────────────────────────
 function buildSectionsPanel() {
   var container = document.getElementById('sections-container');
-  if (!container) return;
-  container.innerHTML = '';
-  blockOrder.forEach(function(entry) {
-    // Clone the static section template by type
-    var template = document.getElementById('sec-tpl-' + entry.type);
-    if (!template) return;
-    var clone = template.cloneNode(true);
-    clone.id = 'sec-' + entry.uid;
-    clone.dataset.uid = entry.uid;
-    clone.dataset.section = entry.type;  // keep for sendBlockToPreview
-    clone.classList.remove('active');    // remove class, control via style.display
-    clone.style.display = (activeUid === entry.uid) ? 'block' : 'none';
-    // Update IDs inside clone to be uid-scoped
-    scopeCloneIds(clone, entry.uid);
-    container.appendChild(clone);
+  var store     = document.getElementById('static-sections-src');
+  if (!container || !store) return;
+
+  // Step 1: Return all section cards back to store (so we can reorder safely)
+  // This avoids losing DOM nodes when rebuilding
+  container.querySelectorAll('.section-card[data-section]').forEach(function(s) {
+    store.appendChild(s);
   });
+
+  // Step 2: Build a map of type → section node from the store
+  var allSections = {};
+  store.querySelectorAll('.section-card[data-section]').forEach(function(s) {
+    var type = s.dataset.section;
+    if (!allSections[type]) allSections[type] = s;
+  });
+
+  // Step 3: Move sections into container in blockOrder sequence
+  var placed = {};
+  blockOrder.forEach(function(entry) {
+    var type = entry.type;
+    if (placed[type]) return; // duplicate type — only place once
+    var sec = allSections[type];
+    if (!sec) return;
+    sec.dataset.uid = entry.uid;
+    sec.style.display = 'none';
+    sec.classList.remove('active');
+    container.appendChild(sec);
+    placed[type] = true;
+  });
+
+  // Step 4: Show active section
+  if (activeUid) {
+    var activeEntry = blockOrder.find(function(e) { return e.uid === activeUid; });
+    if (activeEntry) {
+      var activeSec = container.querySelector('[data-section="' + activeEntry.type + '"]');
+      if (activeSec) activeSec.style.display = 'block';
+    }
+  }
 }
 
-// Prefix all id= and for= inside a clone to avoid conflicts
-function scopeCloneIds(el, uid) {
-  // We leave original IDs intact — each block type can only have one active instance
-  // showing at a time; populate/collect functions use the first visible section.
-  // If duplicate blocks need separate state, a future enhancement could scope IDs.
-  // For now, duplicate blocks share the same form state (last-write wins on save).
-}
+// scopeCloneIds — no longer needed, sections are moved not cloned
 
 // ── ACTIVE SECTION ────────────────────────────────────────────
 var activeUid = '';
 
 function showSectionByUid(uid) {
   activeUid = uid;
+  // Find type for this uid
+  var entry = blockOrder.find(function(e) { return e.uid === uid; });
+  var type  = entry ? entry.type : null;
+
+  // Show the section for this type, hide others
   document.querySelectorAll('#sections-container .section-card').forEach(function(s) {
-    s.style.display = (s.dataset.uid === uid) ? 'block' : 'none';
+    s.style.display = (s.dataset.section === type) ? 'block' : 'none';
+    if (s.dataset.section === type) s.dataset.uid = uid; // update uid binding
   });
+
+  // Update sidebar nav active state
   document.querySelectorAll('#sidebar-nav-list .nav-item').forEach(function(n) {
     n.classList.toggle('active', n.dataset.uid === uid);
   });
@@ -1370,7 +1378,7 @@ function showSectionByUid(uid) {
 
 // Legacy shim for any onclick="showSection(...)" still in static templates
 function showSection(type) {
-  // Find first block of that type
+  // Find first uid for this type in blockOrder
   for (var i = 0; i < blockOrder.length; i++) {
     if (blockOrder[i].type === type) {
       showSectionByUid(blockOrder[i].uid);
@@ -1383,6 +1391,7 @@ function showSection(type) {
 function addBlockOfType(type) {
   var uid = makeUid();
   blockOrder.push({ uid: uid, type: type });
+  activeUid = uid;
   buildSectionsPanel();
   buildSidebarNav();
   showSectionByUid(uid);
@@ -1475,6 +1484,10 @@ function populateAll(cfg) {
   buildSidebarNav();
   if (activeUid) showSectionByUid(activeUid);
 
+  // ВАЖНО: сначала buildRepeaters — создаёт DOM-элементы (banner-slides, counters-items и т.д.)
+  // затем populate* — заполняет эти элементы данными
+  buildRepeaters();
+
   // Populate forms: for each block call the matching populate function
   blocks.forEach(function(b, idx) {
     var fn = BLOCK_POPULATORS[b.type];
@@ -1482,8 +1495,6 @@ function populateAll(cfg) {
       try { fn(b); } catch(err) { console.warn('populate error', b.type, err); }
     }
   });
-
-  buildRepeaters();
 }
 
 // ── THEME ─────────────────────────────────────────────────────

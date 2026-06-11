@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Конфигуратор КП v2</title>
+<title>SELLERTAB SELLEUM</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; }
 
 :root {
-  --accent: #4a6cf7;
-  --accent-hover: #3a5ce6;
-  --accent-light: #eef1fe;
+  --accent: #36FF00;
+  --accent-hover: #28cc00;
+  --accent-light: #e8ffe0;
   --bg: #f7f8fc;
   --surface: #ffffff;
   --border: #e2e6f0;
@@ -19,14 +19,14 @@ html, body { height: 100%; overflow: hidden; }
   --text: #1a1a1a;
   --text-muted: #6b7280;
   --text-faint: #9ca3af;
-  --sidebar-bg: #111827;
+  --sidebar-bg: #000000;
   --sidebar-text: #e5e7eb;
   --sidebar-muted: #6b7280;
-  --sidebar-active: #4a6cf7;
-  --sidebar-hover: #1f2937;
+  --sidebar-active: #36FF00;
+  --sidebar-hover: #0d0d0d;
   --radius: 10px;
   --radius-sm: 6px;
-  --shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+  --shadow: 0 1px 4px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.4);
   --transition: .18s ease;
 }
 
@@ -43,7 +43,7 @@ body {
 /* ── TOP BAR ──────────────────────────────────────────────── */
 .top-bar {
   height: 48px;
-  background: #111827;
+  background: #000000;
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -53,8 +53,10 @@ body {
 }
 .top-bar-title {
   color: #fff;
-  font-weight: 700;
-  font-size: 14px;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -73,14 +75,14 @@ body {
   font-size: 13px;
   flex: 1;
   min-width: 0;
-  background: #1f2937;
+  background: #0d0d0d;
   color: #e5e7eb;
   font-family: inherit;
 }
 .top-bar-connect input[type=text]::placeholder { color: #6b7280; }
 .top-bar-connect input[type=text]:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(74,108,247,.5);
+  box-shadow: 0 0 0 2px rgba(54,255,0,.4);
 }
 .top-bar-connect button {
   height: 30px;
@@ -127,10 +129,10 @@ body {
   max-width: 480px;
   display: flex;
   flex-direction: column;
-  background: #111827;
+  background: #000000;
   overflow: hidden;
   flex-shrink: 0;
-  border-right: 1px solid #1f2937;
+  border-right: 1px solid #1a1a1a;
 }
 
 .sidebar-nav {
@@ -138,13 +140,13 @@ body {
   overflow-y: auto;
   flex-shrink: 0;
   max-height: 196px;
-  border-bottom: 1px solid #1f2937;
+  border-bottom: 1px solid #1a1a1a;
   scrollbar-width: thin;
-  scrollbar-color: #374151 transparent;
+  scrollbar-color: #1a1a1a transparent;
 }
 .sidebar-nav::-webkit-scrollbar { width: 4px; }
 .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
-.sidebar-nav::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 4px; }
 
 .sidebar-nav-label {
   font-size: 10px;
@@ -174,7 +176,7 @@ body {
   border-left: 3px solid transparent;
 }
 .nav-item:hover { background: var(--sidebar-hover); color: var(--sidebar-text); }
-.nav-item.active { background: #1a2540; color: #fff; border-left-color: var(--sidebar-active); }
+.nav-item.active { background: #081500; color: #36FF00; border-left-color: var(--sidebar-active); }
 .nav-item .icon { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
 
 .sections-panel {
@@ -260,7 +262,7 @@ body {
   font-size: 12px;
   cursor: pointer;
   white-space: nowrap;
-  color: #374151;
+  color: #1a1a1a;
 }
 .template-load label.file-btn:hover { background: #f3f4f6; }
 .template-load input[type=file] { display: none; }
@@ -273,9 +275,9 @@ body {
   width: 230px;
   font-family: inherit;
   background: #fff;
-  color: #374151;
+  color: #1a1a1a;
 }
-.tpl-url-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74,108,247,.12); }
+.tpl-url-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(54,255,0,.12); }
 
 .preview-frame-wrap {
   flex: 1;
@@ -300,7 +302,7 @@ body {
 .section-title {
   font-size: 15px;
   font-weight: 700;
-  color: #111827;
+  color: #000000;
   margin-bottom: 14px;
   padding-bottom: 10px;
   border-bottom: 2px solid #f3f4f6;
@@ -366,7 +368,7 @@ input[type="url"]:focus,
 textarea:focus,
 select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(74,108,247,.1);
+  box-shadow: 0 0 0 2px rgba(54,255,0,.1);
 }
 textarea { resize: vertical; min-height: 70px; }
 
@@ -460,7 +462,7 @@ textarea { resize: vertical; min-height: 70px; }
 .btn-primary {
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 2px 6px rgba(74,108,247,.3);
+  box-shadow: 0 2px 6px rgba(54,255,0,.3);
 }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-primary:active { transform: translateY(1px); }
@@ -575,14 +577,14 @@ textarea { resize: vertical; min-height: 70px; }
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 4px;
-  border: 1px solid #374151;
-  background: #1f2937;
+  border: 1px solid #2a2a2a;
+  background: #0d0d0d;
   color: #9ca3af;
   cursor: pointer;
   font-family: inherit;
   font-weight: 600;
 }
-.sidebar-add-btn:hover { background: #374151; color: #e5e7eb; }
+.sidebar-add-btn:hover { background: #1a1a1a; color: #36FF00; }
 
 /* Static theme nav item */
 .nav-item-static {
@@ -602,7 +604,7 @@ textarea { resize: vertical; min-height: 70px; }
   user-select: none;
 }
 .nav-item-static:hover { background: var(--sidebar-hover); color: var(--sidebar-text); }
-.nav-item-static.active { background: #1a2540; color: #fff; border-left-color: var(--sidebar-active); }
+.nav-item-static.active { background: #081500; color: #36FF00; border-left-color: var(--sidebar-active); }
 .nav-item-static .nav-item-inner { display:flex; align-items:center; gap:6px; flex:1; min-width:0; overflow:hidden; }
 .nav-item-static .nav-item-inner span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .nav-static-badge {
@@ -610,7 +612,7 @@ textarea { resize: vertical; min-height: 70px; }
   font-weight: 700;
   letter-spacing: .05em;
   color: var(--sidebar-muted);
-  background: #1f2937;
+  background: #0a1f00;
   border-radius: 3px;
   padding: 1px 5px;
   text-transform: uppercase;
@@ -618,8 +620,8 @@ textarea { resize: vertical; min-height: 70px; }
 }
 
 /* nav-item drag */
-.nav-item.dragging { opacity: .4; background: #1f2937; }
-.nav-item.drag-over { border-top: 2px solid var(--sidebar-active); }
+.nav-item.dragging { opacity: .4; background: #0d0d0d; }
+.nav-item.drag-over { border-top: 2px solid #36FF00; }
 
 .nav-item-inner {
   display: flex;
@@ -649,7 +651,7 @@ textarea { resize: vertical; min-height: 70px; }
   display: flex; align-items: center; justify-content: center;
   padding: 0;
 }
-.nav-ctrl-btn:hover { background: #374151; color: #e5e7eb; }
+.nav-ctrl-btn:hover { background: #1a1a1a; color: #36FF00; }
 .nav-drag-handle {
   color: #4b5563;
   cursor: grab;
@@ -661,8 +663,8 @@ textarea { resize: vertical; min-height: 70px; }
 /* add block dropdown */
 .add-block-dropdown {
   position: fixed;
-  background: #1f2937;
-  border: 1px solid #374151;
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
   border-radius: 6px;
   z-index: 500;
   min-width: 160px;
@@ -682,7 +684,7 @@ textarea { resize: vertical; min-height: 70px; }
   color: #d1d5db;
   cursor: pointer;
 }
-.add-block-item:hover { background: #374151; color: #fff; }
+.add-block-item:hover { background: #1a1a1a; color: #fff; }
 
 /* section header with uid indicator */
 .section-title .section-uid {
@@ -703,7 +705,7 @@ textarea { resize: vertical; min-height: 70px; }
   height: 30px;
   border-radius: 5px;
   border: none;
-  background: #1f2937;
+  background: #0d0d0d;
   color: #9ca3af;
   font-size: 17px;
   cursor: pointer;
@@ -713,7 +715,7 @@ textarea { resize: vertical; min-height: 70px; }
   transition: background .15s, color .15s;
   line-height: 1;
 }
-.undo-btn:hover:not(:disabled) { background: #374151; color: #e5e7eb; }
+.undo-btn:hover:not(:disabled) { background: #1a1a1a; color: #36FF00; }
 .undo-btn:disabled { opacity: .35; cursor: default; }
 </style>
 </head>
@@ -721,7 +723,7 @@ textarea { resize: vertical; min-height: 70px; }
 
 <!-- TOP BAR -->
 <div class="top-bar">
-  <div class="top-bar-title">⚙️ КП Конфигуратор</div>
+  <div class="top-bar-title"><span style="color:#36FF00">SELLERTAB</span> <span style="color:#ffffff">SELLEUM</span></div>
   <div class="top-bar-undo">
     <button class="undo-btn" id="btn-undo" onclick="historyUndo()" title="Отменить (Ctrl+Z)" disabled>&#8630;</button>
     <button class="undo-btn" id="btn-redo" onclick="historyRedo()" title="Повторить (Ctrl+Y)" disabled>&#8631;</button>
@@ -2631,9 +2633,9 @@ document.addEventListener('keydown', function(e) {
           <div class="color-group">
             <div class="color-group-title">Глобальные цвета</div>
             <div class="color-grid">
-              <div class="field"><label>--brand</label><div class="color-field"><input type="color" id="css-brand-c" oninput="syncColorToText(this,'css-brand')"><input type="text" id="css-brand" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-brand-c')"></div></div>
-              <div class="field"><label>--brand-hover</label><div class="color-field"><input type="color" id="css-brand-hover-c" oninput="syncColorToText(this,'css-brand-hover')"><input type="text" id="css-brand-hover" placeholder="#3a5ce6" oninput="syncTextToColor(this,'css-brand-hover-c')"></div></div>
-              <div class="field"><label>--brand-light</label><div class="color-field"><input type="color" id="css-brand-light-c" oninput="syncColorToText(this,'css-brand-light')"><input type="text" id="css-brand-light" placeholder="#eef1fe" oninput="syncTextToColor(this,'css-brand-light-c')"></div></div>
+              <div class="field"><label>--brand</label><div class="color-field"><input type="color" id="css-brand-c" oninput="syncColorToText(this,'css-brand')"><input type="text" id="css-brand" placeholder="#36FF00" oninput="syncTextToColor(this,'css-brand-c')"></div></div>
+              <div class="field"><label>--brand-hover</label><div class="color-field"><input type="color" id="css-brand-hover-c" oninput="syncColorToText(this,'css-brand-hover')"><input type="text" id="css-brand-hover" placeholder="#28cc00" oninput="syncTextToColor(this,'css-brand-hover-c')"></div></div>
+              <div class="field"><label>--brand-light</label><div class="color-field"><input type="color" id="css-brand-light-c" oninput="syncColorToText(this,'css-brand-light')"><input type="text" id="css-brand-light" placeholder="#0a1f00" oninput="syncTextToColor(this,'css-brand-light-c')"></div></div>
               <div class="field"><label>--bg</label><div class="color-field"><input type="color" id="css-bg-c" oninput="syncColorToText(this,'css-bg')"><input type="text" id="css-bg" placeholder="#ffffff" oninput="syncTextToColor(this,'css-bg-c')"></div></div>
               <div class="field"><label>--bg-alt</label><div class="color-field"><input type="color" id="css-bg-alt-c" oninput="syncColorToText(this,'css-bg-alt')"><input type="text" id="css-bg-alt" placeholder="#f7f8fc" oninput="syncTextToColor(this,'css-bg-alt-c')"></div></div>
               <div class="field"><label>--surface</label><div class="color-field"><input type="color" id="css-surface-c" oninput="syncColorToText(this,'css-surface')"><input type="text" id="css-surface" placeholder="#ffffff" oninput="syncTextToColor(this,'css-surface-c')"></div></div>
@@ -2656,15 +2658,15 @@ document.addEventListener('keydown', function(e) {
             <div class="color-grid">
               <div class="field"><label>banner-bg-fallback</label><div class="color-field"><input type="color" id="css-banner-bg-fallback-c" oninput="syncColorToText(this,'css-banner-bg-fallback')"><input type="text" id="css-banner-bg-fallback" placeholder="#1a1a2e" oninput="syncTextToColor(this,'css-banner-bg-fallback-c')"></div></div>
               <div class="field"><label>banner-title-color</label><div class="color-field"><input type="color" id="css-banner-title-color-c" oninput="syncColorToText(this,'css-banner-title-color')"><input type="text" id="css-banner-title-color" placeholder="#ffffff" oninput="syncTextToColor(this,'css-banner-title-color-c')"></div></div>
-              <div class="field"><label>banner-dot-active</label><div class="color-field"><input type="color" id="css-banner-dot-active-c" oninput="syncColorToText(this,'css-banner-dot-active')"><input type="text" id="css-banner-dot-active" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-banner-dot-active-c')"></div></div>
+              <div class="field"><label>banner-dot-active</label><div class="color-field"><input type="color" id="css-banner-dot-active-c" oninput="syncColorToText(this,'css-banner-dot-active')"><input type="text" id="css-banner-dot-active" placeholder="#36FF00" oninput="syncTextToColor(this,'css-banner-dot-active-c')"></div></div>
             </div>
           </div>
           <div class="color-group">
             <div class="color-group-title">Счётчики</div>
             <div class="color-grid">
               <div class="field"><label>counter-bg</label><div class="color-field"><input type="color" id="css-counter-bg-c" oninput="syncColorToText(this,'css-counter-bg')"><input type="text" id="css-counter-bg" placeholder="#f0f4ff" oninput="syncTextToColor(this,'css-counter-bg-c')"></div></div>
-              <div class="field"><label>counter-number</label><div class="color-field"><input type="color" id="css-counter-number-c" oninput="syncColorToText(this,'css-counter-number')"><input type="text" id="css-counter-number" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-counter-number-c')"></div></div>
-              <div class="field"><label>counter-suffix</label><div class="color-field"><input type="color" id="css-counter-suffix-c" oninput="syncColorToText(this,'css-counter-suffix')"><input type="text" id="css-counter-suffix" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-counter-suffix-c')"></div></div>
+              <div class="field"><label>counter-number</label><div class="color-field"><input type="color" id="css-counter-number-c" oninput="syncColorToText(this,'css-counter-number')"><input type="text" id="css-counter-number" placeholder="#36FF00" oninput="syncTextToColor(this,'css-counter-number-c')"></div></div>
+              <div class="field"><label>counter-suffix</label><div class="color-field"><input type="color" id="css-counter-suffix-c" oninput="syncColorToText(this,'css-counter-suffix')"><input type="text" id="css-counter-suffix" placeholder="#36FF00" oninput="syncTextToColor(this,'css-counter-suffix-c')"></div></div>
               <div class="field"><label>counter-label</label><div class="color-field"><input type="color" id="css-counter-label-c" oninput="syncColorToText(this,'css-counter-label')"><input type="text" id="css-counter-label" placeholder="#6b7280" oninput="syncTextToColor(this,'css-counter-label-c')"></div></div>
               <div class="field"><label>counter-divider</label><div class="color-field"><input type="color" id="css-counter-divider-c" oninput="syncColorToText(this,'css-counter-divider')"><input type="text" id="css-counter-divider" placeholder="#e2e6f0" oninput="syncTextToColor(this,'css-counter-divider-c')"></div></div>
             </div>
@@ -2683,7 +2685,7 @@ document.addEventListener('keydown', function(e) {
             <div class="color-group-title">Этапы работы</div>
             <div class="color-grid">
               <div class="field"><label>steps-card-bg</label><div class="color-field"><input type="color" id="css-steps-card-bg-c" oninput="syncColorToText(this,'css-steps-card-bg')"><input type="text" id="css-steps-card-bg" placeholder="#ffffff" oninput="syncTextToColor(this,'css-steps-card-bg-c')"></div></div>
-              <div class="field"><label>steps-accent</label><div class="color-field"><input type="color" id="css-steps-accent-c" oninput="syncColorToText(this,'css-steps-accent')"><input type="text" id="css-steps-accent" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-steps-accent-c')"></div></div>
+              <div class="field"><label>steps-accent</label><div class="color-field"><input type="color" id="css-steps-accent-c" oninput="syncColorToText(this,'css-steps-accent')"><input type="text" id="css-steps-accent" placeholder="#36FF00" oninput="syncTextToColor(this,'css-steps-accent-c')"></div></div>
               <div class="field"><label>steps-title</label><div class="color-field"><input type="color" id="css-steps-title-c" oninput="syncColorToText(this,'css-steps-title')"><input type="text" id="css-steps-title" placeholder="#1a1a1a" oninput="syncTextToColor(this,'css-steps-title-c')"></div></div>
               <div class="field"><label>steps-desc</label><div class="color-field"><input type="color" id="css-steps-desc-c" oninput="syncColorToText(this,'css-steps-desc')"><input type="text" id="css-steps-desc" placeholder="#6b7280" oninput="syncTextToColor(this,'css-steps-desc-c')"></div></div>
               <div class="field"><label>steps-arrow</label><div class="color-field"><input type="color" id="css-steps-arrow-c" oninput="syncColorToText(this,'css-steps-arrow')"><input type="text" id="css-steps-arrow" placeholder="#d1d5db" oninput="syncTextToColor(this,'css-steps-arrow-c')"></div></div>
@@ -2694,7 +2696,7 @@ document.addEventListener('keydown', function(e) {
             <div class="color-grid">
               <div class="field"><label>faq-bg</label><div class="color-field"><input type="color" id="css-faq-bg-c" oninput="syncColorToText(this,'css-faq-bg')"><input type="text" id="css-faq-bg" placeholder="#ffffff" oninput="syncTextToColor(this,'css-faq-bg-c')"></div></div>
               <div class="field"><label>faq-hover</label><div class="color-field"><input type="color" id="css-faq-hover-c" oninput="syncColorToText(this,'css-faq-hover')"><input type="text" id="css-faq-hover" placeholder="#f7f8fc" oninput="syncTextToColor(this,'css-faq-hover-c')"></div></div>
-              <div class="field"><label>faq-open-border</label><div class="color-field"><input type="color" id="css-faq-open-border-c" oninput="syncColorToText(this,'css-faq-open-border')"><input type="text" id="css-faq-open-border" placeholder="#4a6cf7" oninput="syncTextToColor(this,'css-faq-open-border-c')"></div></div>
+              <div class="field"><label>faq-open-border</label><div class="color-field"><input type="color" id="css-faq-open-border-c" oninput="syncColorToText(this,'css-faq-open-border')"><input type="text" id="css-faq-open-border" placeholder="#36FF00" oninput="syncTextToColor(this,'css-faq-open-border-c')"></div></div>
             </div>
           </div>
           <div class="color-group" style="margin-bottom:0">

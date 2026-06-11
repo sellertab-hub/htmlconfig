@@ -658,6 +658,30 @@ textarea { resize: vertical; min-height: 70px; }
   color: #9ca3af;
   margin-left: auto;
 }
+
+/* ── UNDO/REDO ────────────────────────────────────────────── */
+.top-bar-undo {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.undo-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  border: none;
+  background: #1f2937;
+  color: #9ca3af;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, color .15s;
+  line-height: 1;
+}
+.undo-btn:hover:not(:disabled) { background: #374151; color: #e5e7eb; }
+.undo-btn:disabled { opacity: .35; cursor: default; }
 </style>
 </head>
 <body>
@@ -665,6 +689,10 @@ textarea { resize: vertical; min-height: 70px; }
 <!-- TOP BAR -->
 <div class="top-bar">
   <div class="top-bar-title">⚙️ КП Конфигуратор</div>
+  <div class="top-bar-undo">
+    <button class="undo-btn" id="btn-undo" onclick="historyUndo()" title="Отменить (Ctrl+Z)" disabled>&#8630;</button>
+    <button class="undo-btn" id="btn-redo" onclick="historyRedo()" title="Повторить (Ctrl+Y)" disabled>&#8631;</button>
+  </div>
   <div class="top-bar-connect">
     <input type="text" id="webapp-url" placeholder="https://script.google.com/macros/s/.../exec" />
     <button onclick="connectAndLoad()">Подключить</button>
@@ -802,6 +830,18 @@ window.addEventListener('DOMContentLoaded', function() {
       var section = e.target.closest('[data-section]');
       if (!section) return;
       sendBlockToPreview(section.dataset.section);
+    });
+
+    // Save undo snapshot on form field changes (debounced)
+    leftPanel.addEventListener('input', function(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        historySaveDebounced();
+      }
+    });
+    leftPanel.addEventListener('change', function(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        historySaveDebounced();
+      }
     });
   }
 
@@ -1394,6 +1434,7 @@ function showSection(type) {
 
 // ── ADD / DUPLICATE / DELETE ──────────────────────────────────
 function addBlockOfType(type) {
+  historySave();
   var uid = makeUid();
   blockOrder.push({ uid: uid, type: type });
   activeUid = uid;
@@ -1404,6 +1445,7 @@ function addBlockOfType(type) {
 }
 
 function duplicateBlock(uid) {
+  historySave();
   var idx = blockOrder.findIndex(function(e) { return e.uid === uid; });
   if (idx < 0) return;
   var newUid = makeUid();
@@ -1417,6 +1459,7 @@ function duplicateBlock(uid) {
 
 function deleteBlock(uid) {
   if (blockOrder.length <= 1) { showToast('Нельзя удалить последний блок', 'error'); return; }
+  historySave();
   var idx = blockOrder.findIndex(function(e) { return e.uid === uid; });
   if (idx < 0) return;
   blockOrder.splice(idx, 1);
@@ -1450,6 +1493,7 @@ function onNavDrop(e) {
   this.classList.remove('drag-over');
   var targetUid = this.dataset.uid;
   if (!_dragSrcUid || _dragSrcUid === targetUid) return;
+  historySave();
   var srcIdx = blockOrder.findIndex(function(b) { return b.uid === _dragSrcUid; });
   var tgtIdx = blockOrder.findIndex(function(b) { return b.uid === targetUid; });
   if (srcIdx < 0 || tgtIdx < 0) return;
@@ -1500,6 +1544,11 @@ function populateAll(cfg) {
       try { fn(b); } catch(err) { console.warn('populate error', b.type, err); }
     }
   });
+
+  // Clear history on fresh config load (clean slate)
+  _undoStack = [];
+  _redoStack = [];
+  historyUpdateButtons();
 }
 
 // ── THEME ─────────────────────────────────────────────────────
@@ -2404,6 +2453,97 @@ function showToast(msg, type) {
     setTimeout(function() { t.remove(); }, 250);
   }, 3500);
 }
+
+// ── UNDO / REDO ───────────────────────────────────────────────
+var _undoStack   = [];  // array of snapshots (past states)
+var _redoStack   = [];  // array of snapshots (future states, after undo)
+var _UNDO_MAX    = 50;  // max history depth
+var _snapPending = false; // debounce flag for form-change snapshots
+
+// Snapshot = { blockOrder: [{uid,type},...], activeUid, formData: {type: blockObj} }
+function historySnapshot() {
+  var snap = {
+    blockOrder: blockOrder.map(function(e) { return { uid: e.uid, type: e.type }; }),
+    activeUid:  activeUid,
+    formData:   {},
+  };
+  // Collect current form state for every known type
+  Object.keys(BLOCK_COLLECTORS).forEach(function(type) {
+    try { snap.formData[type] = BLOCK_COLLECTORS[type](); } catch(e) {}
+  });
+  return snap;
+}
+
+// Push current state to undoStack BEFORE making a change
+function historySave() {
+  var snap = historySnapshot();
+  _undoStack.push(snap);
+  if (_undoStack.length > _UNDO_MAX) _undoStack.shift();
+  _redoStack = []; // any new action clears redo future
+  historyUpdateButtons();
+}
+
+// Debounced save for form field changes
+var _formChangeSaveTimer = null;
+function historySaveDebounced() {
+  if (!_snapPending) {
+    _snapPending = true;
+    historySave();
+  }
+  clearTimeout(_formChangeSaveTimer);
+  _formChangeSaveTimer = setTimeout(function() {
+    _snapPending = false;
+  }, 1200);
+}
+
+function historyRestore(snap) {
+  if (!snap) return;
+  blockOrder = snap.blockOrder.map(function(e) { return { uid: e.uid, type: e.type }; });
+  activeUid  = snap.activeUid || (blockOrder.length ? blockOrder[0].uid : '');
+  buildSectionsPanel();
+  buildSidebarNav();
+  buildRepeaters();
+  Object.keys(snap.formData || {}).forEach(function(type) {
+    var fn = BLOCK_POPULATORS[type];
+    if (fn) { try { fn(snap.formData[type]); } catch(e) {} }
+  });
+  if (activeUid) showSectionByUid(activeUid);
+  setTimeout(sendAllBlocksToPreview, 100);
+  historyUpdateButtons();
+}
+
+function historyUndo() {
+  if (!_undoStack.length) return;
+  var currentSnap = historySnapshot();
+  _redoStack.push(currentSnap);
+  var prev = _undoStack.pop();
+  historyRestore(prev);
+  showToast('Отменено', 'info');
+}
+
+function historyRedo() {
+  if (!_redoStack.length) return;
+  var currentSnap = historySnapshot();
+  _undoStack.push(currentSnap);
+  var next = _redoStack.pop();
+  historyRestore(next);
+  showToast('Повторено', 'info');
+}
+
+function historyUpdateButtons() {
+  var btnU = document.getElementById('btn-undo');
+  var btnR = document.getElementById('btn-redo');
+  if (btnU) btnU.disabled = _undoStack.length === 0;
+  if (btnR) btnR.disabled = _redoStack.length === 0;
+}
+
+// Keyboard shortcuts: Ctrl+Z = undo, Ctrl+Y / Ctrl+Shift+Z = redo
+document.addEventListener('keydown', function(e) {
+  var mod = e.ctrlKey || e.metaKey;
+  if (!mod) return;
+  if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); historyUndo(); }
+  if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); historyRedo(); }
+});
 </script>
 
 <!-- STATIC SECTION TEMPLATES (hidden, used by JS as cloning source) -->

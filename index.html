@@ -1355,6 +1355,7 @@ var BLOCK_POPULATORS = {
   installment:  populateInstallment,
   advantages:   populateAdvantages,
   estimate:     populateEstimate,
+  'manager-popup': populateManagerPopup,
   gallery:      populateGallery,
   'text-block': populateTextBlock,
 };
@@ -1677,7 +1678,8 @@ var CSS_VAR_IDS = [
   'projects-card-bg','projects-title','projects-desc','projects-link',
   'cta-grad-left','cta-grad-mid','cta-grad-right','cta-title','cta-subtitle','cta-btn-bg','cta-btn-text','cta-badge-dot',
   'footer-bg','footer-text','footer-headings','footer-accent','footer-brand-name','footer-brand-accent',
-  'gallery-bg','gallery-btn-bg','gallery-btn-border','gallery-btn-color','gallery-dot','gallery-dot-active'
+  'gallery-bg','gallery-btn-bg','gallery-btn-border','gallery-btn-color','gallery-dot','gallery-dot-active',
+  'infographic-item-bg','infographic-border','infographic-icon','infographic-value','infographic-label'
 ];
 
 function cssVarToId(v) { return 'css-' + v.replace(/^--/,'').replace(/-/g,'-'); }
@@ -2318,11 +2320,13 @@ function populateEstimate(d) {
   setCheck('estimate-showTotals',   d.showTotals !== false);
   setVal('estimate-discountExpired', d.discountExpired || '');
   setVal('estimate-offerExpired',    d.offerExpired    || '');
+  setVal('estimate-deliveryLabel',   d.deliveryLabel   !== undefined ? d.deliveryLabel : '');
+  setVal('estimate-deliveryText',    d.deliveryText    || '');
 }
 
 function collectEstimate() {
   var modeEl = document.getElementById('estimate-viewMode');
-  return {
+  var obj = {
     type:            'estimate',
     viewMode:        modeEl ? modeEl.value : 'list',
     showTotals:      getCheck('estimate-showTotals'),
@@ -2331,8 +2335,37 @@ function collectEstimate() {
     discountExpired: getVal('estimate-discountExpired'),
     offerExpired:    getVal('estimate-offerExpired'),
   };
+  var dl = getVal('estimate-deliveryLabel');
+  var dt = getVal('estimate-deliveryText');
+  if (dl !== '') obj.deliveryLabel = dl;
+  if (dt !== '') obj.deliveryText  = dt;
+  return obj;
 }
 
+
+// ── MANAGER POPUP ─────────────────────────────────────────────
+function populateManagerPopup(d) {
+  if (!d) return;
+  var enEl = document.getElementById('mp-enabled');
+  if (enEl) enEl.value = d.enabled === false ? 'false' : 'true';
+  setVal('mp-delay', d.delay !== undefined ? String(d.delay) : '');
+  setVal('mp-title', d.title || '');
+  setVal('mp-sub',   d.sub   || '');
+}
+
+function collectManagerPopup() {
+  var enEl = document.getElementById('mp-enabled');
+  var enabled = enEl ? enEl.value !== 'false' : true;
+  var delay = getVal('mp-delay');
+  var obj = {
+    type:    'manager-popup',
+    enabled: enabled,
+    title:   getVal('mp-title'),
+    sub:     getVal('mp-sub'),
+  };
+  if (delay !== '') obj.delay = parseFloat(delay);
+  return obj;
+}
 // ── GALLERY ───────────────────────────────────────────────────
 function buildGalleryItems() {
   var c = document.getElementById('gallery-items');
@@ -2414,6 +2447,7 @@ var BLOCK_COLLECTORS = {
   installment:  collectInstallment,
   advantages:   collectAdvantages,
   estimate:     collectEstimate,
+  'manager-popup': collectManagerPopup,
   gallery:      collectGallery,
   'text-block': collectTextBlock,
 };
@@ -2870,6 +2904,20 @@ document.addEventListener('keydown', function(e) {
               <div class="field"><label>Точка (активная)</label><div class="color-field"><input type="color" id="css-gallery-dot-active-c" oninput="syncColorToText(this,'css-gallery-dot-active')"><input type="text" id="css-gallery-dot-active" placeholder="" oninput="syncTextToColor(this,'css-gallery-dot-active-c')"></div></div>
             </div>
           </div>
+          <div class="color-group">
+            <div class="color-group-title">Гарантии</div>
+            <div class="field-row field-row-2">
+              <div class="field"><label>Фон блока</label><div class="color-field"><input type="color" id="css-infographic-item-bg-c" oninput="syncColorToText(this,'css-infographic-item-bg')"><input type="text" id="css-infographic-item-bg" placeholder="" oninput="syncTextToColor(this,'css-infographic-item-bg-c')"></div></div>
+              <div class="field"><label>Граница / разделители</label><div class="color-field"><input type="color" id="css-infographic-border-c" oninput="syncColorToText(this,'css-infographic-border')"><input type="text" id="css-infographic-border" placeholder="" oninput="syncTextToColor(this,'css-infographic-border-c')"></div></div>
+            </div>
+            <div class="field-row field-row-2">
+              <div class="field"><label>Цвет иконок</label><div class="color-field"><input type="color" id="css-infographic-icon-c" oninput="syncColorToText(this,'css-infographic-icon')"><input type="text" id="css-infographic-icon" placeholder="" oninput="syncTextToColor(this,'css-infographic-icon-c')"></div></div>
+              <div class="field"><label>Цвет значений</label><div class="color-field"><input type="color" id="css-infographic-value-c" oninput="syncColorToText(this,'css-infographic-value')"><input type="text" id="css-infographic-value" placeholder="" oninput="syncTextToColor(this,'css-infographic-value-c')"></div></div>
+            </div>
+            <div class="field-row field-row-2">
+              <div class="field"><label>Цвет подписей</label><div class="color-field"><input type="color" id="css-infographic-label-c" oninput="syncColorToText(this,'css-infographic-label')"><input type="text" id="css-infographic-label" placeholder="" oninput="syncTextToColor(this,'css-infographic-label-c')"></div></div>
+            </div>
+          </div>
           <div class="color-group" style="margin-bottom:0">
             <div class="color-group-title">Логотип</div>
             <div class="field-row field-row-2">
@@ -3143,6 +3191,9 @@ document.addEventListener('keydown', function(e) {
           </div>
           <div class="field"><label>Текст при истёкшей скидке</label><input type="text" id="estimate-discountExpired" placeholder="Скидка больше не действует"></div>
           <div class="field"><label>Текст при истёкшем КП</label><textarea id="estimate-offerExpired" rows="3" placeholder="Срок действия коммерческого предложения истёк..."></textarea></div>
+          <hr style="margin:12px 0;border:none;border-top:1px solid var(--border)">
+          <div class="field"><label>Текст строки доставки</label><input type="text" id="estimate-deliveryLabel" placeholder="Доставка по городу — бесплатно от 500 BYN"></div>
+          <div class="field"><label>Текст попапа доставки (подробно)</label><textarea id="estimate-deliveryText" rows="3" placeholder="Доставка в пределах Минска — бесплатно..."></textarea></div>
           <div class="save-row">
             <button class="btn btn-primary btn-lg" onclick="saveBlock('estimate')">Сохранить смету</button>
             <span class="save-msg" id="save-msg-estimate"></span>
@@ -3151,6 +3202,29 @@ document.addEventListener('keydown', function(e) {
       </div>
 
       <!-- ── ГАЛЕРЕЯ ─────────────────────────────────────── -->
+      <!-- ── ПОПАП МЕНЕДЖЕРА ─────────────────────────────── -->
+      <div class="section-card" id="sec-manager-popup" data-section="manager-popup">
+        <div class="section-title">Попап менеджера</div>
+        <div class="card">
+          <div class="field-row field-row-2">
+            <div class="field">
+              <label>Показывать</label>
+              <select id="mp-enabled">
+                <option value="true">Да</option>
+                <option value="false">Нет</option>
+              </select>
+            </div>
+            <div class="field"><label>Задержка показа (сек)</label><input type="number" id="mp-delay" placeholder="15" min="0"></div>
+          </div>
+          <div class="field"><label>Заголовок</label><input type="text" id="mp-title" placeholder="Появились вопросы или пожелания?"></div>
+          <div class="field"><label>Подзаголовок</label><input type="text" id="mp-sub" placeholder="Свяжитесь со мной удобным способом — отвечу быстро."></div>
+          <div class="save-row">
+            <button class="btn btn-primary btn-lg" onclick="saveBlock('manager-popup')">Сохранить</button>
+            <span class="save-msg" id="save-msg-manager-popup"></span>
+          </div>
+        </div>
+      </div>
+
       <div class="section-card" id="sec-gallery" data-section="gallery">
         <div class="section-title">Галерея</div>
         <div class="card">

@@ -832,15 +832,19 @@ window.addEventListener('DOMContentLoaded', function() {
       sendBlockToPreview(section.dataset.section);
     });
 
-    // Save undo snapshot on form field changes (debounced)
-    leftPanel.addEventListener('input', function(e) {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-        historySaveDebounced();
+    // Save undo snapshot when user focuses any field (BEFORE the change)
+    leftPanel.addEventListener('focusin', function(e) {
+      var tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+        historySaveOnFocus();
       }
     });
-    leftPanel.addEventListener('change', function(e) {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-        historySaveDebounced();
+    // Also catch clicks on color swatches / checkboxes / radios that may not fire focusin
+    leftPanel.addEventListener('mousedown', function(e) {
+      var tag = e.target.tagName;
+      var type = (e.target.type || '').toLowerCase();
+      if (tag === 'INPUT' && (type === 'color' || type === 'checkbox' || type === 'radio')) {
+        historySaveOnFocus();
       }
     });
   }
@@ -2458,7 +2462,6 @@ function showToast(msg, type) {
 var _undoStack   = [];  // array of snapshots (past states)
 var _redoStack   = [];  // array of snapshots (future states, after undo)
 var _UNDO_MAX    = 50;  // max history depth
-var _snapPending = false; // debounce flag for form-change snapshots
 
 // Snapshot = { blockOrder: [{uid,type},...], activeUid, formData: {type: blockObj} }
 function historySnapshot() {
@@ -2483,17 +2486,14 @@ function historySave() {
   historyUpdateButtons();
 }
 
-// Debounced save for form field changes
-var _formChangeSaveTimer = null;
-function historySaveDebounced() {
-  if (!_snapPending) {
-    _snapPending = true;
-    historySave();
-  }
-  clearTimeout(_formChangeSaveTimer);
-  _formChangeSaveTimer = setTimeout(function() {
-    _snapPending = false;
-  }, 1200);
+// Save snapshot when user focuses a new field (before the change)
+// Uses a 300ms cooldown to avoid duplicate saves on rapid field switches
+var _lastFocusSaveTime = 0;
+function historySaveOnFocus() {
+  var now = Date.now();
+  if (now - _lastFocusSaveTime < 300) return; // already saved very recently
+  _lastFocusSaveTime = now;
+  historySave();
 }
 
 function historyRestore(snap) {

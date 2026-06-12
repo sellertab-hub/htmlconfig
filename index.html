@@ -427,6 +427,8 @@ textarea { resize: vertical; min-height: 70px; }
 .img-preview.visible { display: block; }
 .url-with-preview { display: flex; align-items: center; gap: 6px; }
 .url-with-preview input { flex: 1; }
+.field-hint { font-size: 11px; color: var(--text-faint); margin-top: 3px; line-height: 1.3; }
+.field-hint strong { color: var(--text-muted); font-weight: 600; }
 
 /* ── REPEATER ─────────────────────────────────────────────── */
 .repeater { display: flex; flex-direction: column; gap: 10px; }
@@ -1736,11 +1738,13 @@ function buildBannerSlides() {
         '<div class="field"><label>Фото десктоп</label><div class="url-with-preview">' +
           '<input type="text" id="banner-img-' + i + '" placeholder="https://..." oninput="updatePreview(this,\'banner-img-preview-' + i + '\')">' +
           '<img id="banner-img-preview-' + i + '" class="img-preview" alt="фото">' +
-        '</div></div>' +
+        '</div>' +
+        '<div class="field-hint"><strong>1920 × 600 px</strong> — JPG/WebP, до 300 КБ</div></div>' +
         '<div class="field"><label>Фото мобильная</label><div class="url-with-preview">' +
           '<input type="text" id="banner-imgm-' + i + '" placeholder="https://..." oninput="updatePreview(this,\'banner-imgm-preview-' + i + '\')">' +
           '<img id="banner-imgm-preview-' + i + '" class="img-preview" alt="моб">' +
-        '</div></div>' +
+        '</div>' +
+        '<div class="field-hint"><strong>768 × 500 px</strong> — JPG/WebP, до 150 КБ</div></div>' +
       '</div>' +
       '<div class="field"><label>Ссылка (клик)</label><input type="text" id="banner-link-' + i + '" placeholder="https://..."></div>';
     c.appendChild(div);
@@ -2014,7 +2018,9 @@ function buildProjectItems() {
         '<div class="field"><label>' + label + '</label><div class="url-with-preview">' +
         '<input type="text" id="proj-photo-' + p + '-' + i + '" placeholder="https://..." oninput="updatePreview(this,\'proj-photo-preview-' + p + '-' + i + '\')">' +
         '<img id="proj-photo-preview-' + p + '-' + i + '" class="img-preview" alt="фото">' +
-        '</div></div>';
+        '</div>' +
+        (p === 0 ? '<div class="field-hint"><strong>600 × 450 px</strong> — JPG/WebP, до 150 КБ (карточка)</div>' : '<div class="field-hint"><strong>1200 × 800 px</strong> — JPG/WebP, до 300 КБ</div>') +
+        '</div>';
     }
     div.innerHTML =
       '<div class="repeater-item-header">Проект ' + (i+1) + '</div>' +
@@ -2421,6 +2427,7 @@ function buildGalleryItems() {
           '<input type="text" id="gallery-img-' + i + '" placeholder="https://..." oninput="updatePreview(this,\'gallery-img-preview-' + i + '\')">' +
           '<img id="gallery-img-preview-' + i + '" class="img-preview" alt="фото">' +
         '</div>' +
+        '<div class="field-hint"><strong>800 × 600 px</strong> — JPG/WebP, до 200 КБ</div>' +
       '</div>' +
       '<div class="field"><label>Ссылка (клик)</label>' +
         '<input type="text" id="gallery-link-' + i + '" placeholder="пусто = лайтбокс, 0 = без действия, URL = ссылка">' +
@@ -2988,6 +2995,7 @@ document.addEventListener('keydown', function(e) {
                   <input type="text" id="theme-logo" placeholder="https://..." oninput="updatePreview(this,'theme-logo-preview')">
                   <img id="theme-logo-preview" class="img-preview" alt="logo">
                 </div>
+                <div class="field-hint"><strong>200 × 60 px</strong> — PNG/SVG с прозрачным фоном, до 50 КБ</div>
               </div>
               <div class="field"><label>Ссылка логотипа (logoHref)</label><input type="text" id="theme-logoHref" placeholder="/"></div>
             </div>
@@ -3171,6 +3179,7 @@ document.addEventListener('keydown', function(e) {
               <input type="text" id="footer-mgr-photo" placeholder="https://..." oninput="updatePreview(this,'footer-mgr-photo-preview')">
               <img id="footer-mgr-photo-preview" class="img-preview" alt="фото">
             </div>
+            <div class="field-hint"><strong>200 × 200 px</strong> — JPG/PNG, квадратное или круг, до 80 КБ</div>
           </div>
 
           <div class="card-title" style="margin:12px 0 10px;"><span>🗺️</span> Карта</div>
@@ -3246,6 +3255,7 @@ document.addEventListener('keydown', function(e) {
                 <option value="table">Таблица</option>
                 <option value="table-photo">Таблица с фото</option>
               </select>
+              <div class="field-hint">Фото товаров (JSON): <strong>400 × 400 px</strong> — JPG/WebP, до 100 КБ</div>
             </div>
             <div class="field" style="display:flex;align-items:flex-end;padding-bottom:2px;">
               <div class="checkbox-row"><input type="checkbox" id="estimate-showTotals"><label for="estimate-showTotals">Показывать итого</label></div>

@@ -1226,6 +1226,7 @@ function toBlockObject(sectionKey, flatData) {
       var modeToEn = {
         'список': 'list',
         'список с итогом по группам': 'list-group-total',
+        'список с флагманом': 'list-flagship',
         'таблица': 'table',
         'таблица с фото': 'table-photo'
       };
@@ -3241,6 +3242,7 @@ document.addEventListener('keydown', function(e) {
               <select id="estimate-viewMode">
                 <option value="list">Список</option>
                 <option value="list-group-total">Список с итогом по группам</option>
+                <option value="list-flagship">Список с флагманом</option>
                 <option value="table">Таблица</option>
                 <option value="table-photo">Таблица с фото</option>
               </select>

@@ -1845,6 +1845,8 @@ function populateAbout(d) {
   setVal('about-text',       d.text       || '');
   setVal('about-youtubeId',  d.youtubeId  || '');
   setVal('about-videoLabel', d.videoLabel || '');
+  setVal('about-imageUrl',   d.imageUrl   || '');
+  if (d.imageUrl) triggerPreview('about-imageUrl', 'about-imageUrl-preview');
   var facts = d.facts || [];
   for (var i = 0; i < 4; i++) {
     var f = facts[i] || {};
@@ -1870,6 +1872,7 @@ function collectAbout() {
     text:       getVal('about-text'),
     youtubeId:  getVal('about-youtubeId'),
     videoLabel: getVal('about-videoLabel'),
+    imageUrl:   getVal('about-imageUrl'),
     facts:      facts,
   };
 }
@@ -3041,6 +3044,14 @@ document.addEventListener('keydown', function(e) {
           <div class="field-row field-row-2">
             <div class="field"><label>ID YouTube-видео</label><input type="text" id="about-youtubeId" placeholder="dQw4w9WgXcQ"></div>
             <div class="field"><label>Подпись под видео</label><input type="text" id="about-videoLabel" placeholder="Смотреть видео о нас"></div>
+          </div>
+          <div class="field">
+            <label>Фото (если нет YouTube)</label>
+            <div class="url-with-preview">
+              <input type="text" id="about-imageUrl" placeholder="https://..." oninput="updatePreview(this,'about-imageUrl-preview')">
+              <img id="about-imageUrl-preview" class="img-preview" alt="фото">
+            </div>
+            <div class="field-hint"><strong>800 × 500 px</strong> — JPG/WebP, до 200 КБ. Используется только если поле YouTube пустое</div>
           </div>
           <div style="margin-top:8px;margin-bottom:6px;padding:8px 0;border-top:1px solid var(--border-light);">
             <div class="card-title" style="margin-bottom:10px;"><span>📌</span> Факты о компании (4 шт.)</div>

@@ -845,7 +845,10 @@ function createTemplateBlob() {
     .replace('{{BLOCKS_JSON}}',    '[]')
     .replace('{{CONFIRMED_JSON}}', 'null')
     .replace('{{PREVIEW_MODE}}',   'true')
-    .replace(/\{\{[A-Z0-9_]+\}\}/g, '""'); // все остальные — пустая строка
+    // Остальные: если плейсхолдер в кавычках "{{X}}" — оставляем пустые кавычки ""
+    // если без кавычек (JS литерал) — заменяем на ""
+    .replace(/"\{\{[A-Z0-9_]+\}\}"/g, '""')  // "{{X}}" → ""
+    .replace(/\{\{[A-Z0-9_]+\}\}/g,   '""');  // {{X}} → ""
   var blob = new Blob([html], { type: 'text/html' });
   return URL.createObjectURL(blob);
 }

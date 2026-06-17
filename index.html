@@ -836,17 +836,37 @@ var KP_TEMPLATE_HTML = "<!DOCTYPE html>\n<html lang=\"ru\">\n<head>\n  <meta cha
 
 function createTemplateBlob() {
   // Заменяем серверные плейсхолдеры дефолтами — чтобы шаблон загружался без JS-ошибок
+  // Демо-данные для превью конфигуратора
+  var _demoEstimate = JSON.stringify([
+    {name:'\u0421тол рабочий Oslo', price:499, oldPrice:599, quantity:2, unit:'\u0448т', photo:'', description:'', specs:''},
+    {name:'\u041aресло офисное Comfort', price:189, oldPrice:0, quantity:4, unit:'\u0448т', photo:'', description:'', specs:''},
+    {name:'\u0428каф библиотечный 3x', price:320, oldPrice:380, quantity:1, unit:'\u0448т', photo:'', description:'', specs:''}
+  ]);
   var html = KP_TEMPLATE_HTML
-    .replace('{{ESTIMATE_JSON}}',  '[]')
+    .replace('{{ESTIMATE_JSON}}',  _demoEstimate)
     .replace('{{EXTRA_JSON}}',     '[]')
     .replace('{{NOTES_JSON}}',     '[]')
     .replace('{{PREPARING_KP}}',   'false')
     .replace('{{THEME_JSON}}',     '{}')
     .replace('{{BLOCKS_JSON}}',    '[]')
     .replace('{{CONFIRMED_JSON}}', 'null')
-    .replace('{{PREVIEW_MODE}}',   'true')
-    // Остальные: если плейсхолдер в кавычках "{{X}}" — оставляем пустые кавычки ""
-    // если без кавычек (JS литерал) — заменяем на ""
+    .replace('{{PREVIEW_MODE}}',   'false')
+    .replace('"{{CLIENT_NAME}}"',  '"\u0418\u0432\u0430\u043d \u041f\u0435\u0442\u0440\u043e\u0432\u0438\u0447"')
+    .replace('"{{CLIENT_PHONE}}"', '"297654321"')
+    .replace('"{{CLIENT_ADDRESS}}"','"\u0433. \u041c\u0438\u043d\u0441\u043a"')
+    .replace('"{{MANAGER_NAME}}"', '"\u0410\u043b\u0435\u043a\u0441\u0435\u0439"')
+    .replace('"{{MANAGER_PHONE}}"', '"+375 29 123-45-67"')
+    .replace('"{{MANAGER_PHONE_HREF}}"', '"375291234567"')
+    .replace('tel:{{MANAGER_PHONE_HREF}}', 'tel:375291234567')
+    .replace('{{CLIENT_NAME}}', '\u0418\u0432\u0430\u043d \u041f\u0435\u0442\u0440\u043e\u0432\u0438\u0447')
+    .replace('{{CLIENT_PHONE}}', '297654321')
+    .replace('{{CLIENT_ADDRESS}}', '\u0433. \u041c\u0438\u043d\u0441\u043a')
+    .replace('{{MANAGER_NAME}}', '\u0410\u043b\u0435\u043a\u0441\u0435\u0439')
+    .replace('{{MANAGER_PHONE}}', '+375 29 123-45-67')
+    .replace('{{MANAGER_PHONE_HREF}}', '375291234567')
+    .replace('"{{DATE_CREATED}}"',  '"' + (function(){var d=new Date();return d.getDate()+'.'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+'.'+d.getFullYear();})() + '"')
+    .replace('"{{DATE_VALID}}"',    '"' + (function(){var d=new Date(Date.now()+14*86400000);return d.getDate()+'.'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+'.'+d.getFullYear();})() + '"')
+    // Остальные: если плейсхолдер в кавычках "{{X}}" — пустые кавычки
     .replace(/"\{\{[A-Z0-9_]+\}\}"/g, '""')  // "{{X}}" → ""
     .replace(/\{\{[A-Z0-9_]+\}\}/g,   '""');  // {{X}} → ""
   var blob = new Blob([html], { type: 'text/html' });

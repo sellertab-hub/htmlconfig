@@ -1475,9 +1475,11 @@ async function loadConfig() {
     if (json.ok === false) throw new Error(json.error || 'getConfig failed');
     // Server returns { ok:true, config:{ blocks:[...], columns:[...] } }
     populateAll(json);
+    setStatus('connected', 'Подключено');
     showToast('Конфигурация загружена', 'success');
     setTimeout(sendAllBlocksToPreview, 500);
   } catch (err) {
+    setStatus('error', 'Ошибка');
     showToast('Ошибка загрузки: ' + err.message, 'error');
   } finally {
     showLoading(false);

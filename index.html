@@ -1178,18 +1178,33 @@ function sendAllBlocksToPreview() {
   // Theme is always first (static block, not in blockOrder)
   var blocks = [];
   if (BLOCK_COLLECTORS['theme']) {
-    try { var t = BLOCK_COLLECTORS['theme'](); if (t) blocks.push(t); } catch(e) {}
+    try {
+      var t = BLOCK_COLLECTORS['theme']();
+      if (t && t.type) blocks.push(t);
+    } catch(e) { console.warn('[KP] collectTheme error:', e); }
   }
 
+  // client-bar и manager-popup — статические блоки (не в blockOrder)
+  ['client-bar', 'manager-popup'].forEach(function(key) {
+    var collector = BLOCK_COLLECTORS[key];
+    if (!collector) return;
+    try {
+      var obj = collector();
+      if (obj && obj.type) blocks.push(obj);
+    } catch(e) {}
+  });
+
   // Then all dynamic blocks in blockOrder sequence
-  var seen = { theme: true };
+  var seen = { theme: true, 'client-bar': true, 'manager-popup': true };
   blockOrder.forEach(function(entry) {
     var collector = BLOCK_COLLECTORS[entry.type];
     if (!collector) return;
-    var blockObj = collector();
-    if (!blockObj || !blockObj.type) return;
-    blocks.push(blockObj);
-    seen[entry.type] = true;
+    try {
+      var blockObj = collector();
+      if (!blockObj || !blockObj.type) return;
+      blocks.push(blockObj);
+      seen[entry.type] = true;
+    } catch(e) { console.warn('[KP] collect error for', entry.type, e); }
   });
 
   // Send as single ordered init message — template rebuilds container in this order
@@ -2523,6 +2538,15 @@ function collectEstimate() {
     orderAction:     oaEl ? oaEl.value : 'order',
     orderCustomUrl:  getVal('estimate-orderCustomUrl'),
   };
+}
+
+function populateManagerPopup(d) {
+  if (!d) return;
+  var enEl = document.getElementById('mp-enabled');
+  if (enEl) enEl.value = (d.enabled === false) ? 'false' : 'true';
+  setVal('mp-delay', d.delay !== undefined ? String(d.delay) : '');
+  setVal('mp-title', d.title || '');
+  setVal('mp-sub',   d.sub   || '');
 }
 
 function collectManagerPopup() {

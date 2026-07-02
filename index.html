@@ -2540,6 +2540,23 @@ function collectEstimate() {
   };
 }
 
+// ── CLIENT-BAR ───────────────────────────────────────────────
+function populateClientBar(d) {
+  if (!d) return;
+  setCheck('cb-showLabel', d.showLabel !== false);
+  setVal('cb-label',       d.label || '');
+  setCheck('cb-showName',  d.showName !== false);
+}
+
+function collectClientBar() {
+  return {
+    type:      'client-bar',
+    showLabel: getCheck('cb-showLabel'),
+    label:     getVal('cb-label'),
+    showName:  getCheck('cb-showName'),
+  };
+}
+
 function populateManagerPopup(d) {
   if (!d) return;
   var enEl = document.getElementById('mp-enabled');

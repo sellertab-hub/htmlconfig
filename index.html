@@ -891,11 +891,12 @@ textarea { resize: vertical; min-height: 70px; }
 
   <div class="top-bar-divider"></div>
 
-  <!-- Статус подключения (URL передаётся параметром) -->
-  <div class="top-bar-connect" style="flex:0 0 auto;">
+  <!-- URL подключения -->
+  <div class="top-bar-connect">
+    <input type="text" id="webapp-url" placeholder="https://script.google.com/macros/s/.../exec" />
+    <button onclick="connectAndLoad()">Подключить</button>
     <div class="status-dot" id="status-dot"></div>
-    <span class="status-label" id="status-label">Подключение…</span>
-    <input type="text" id="webapp-url" style="display:none" />
+    <span class="status-label" id="status-label">Не подключено</span>
   </div>
 </div>
 

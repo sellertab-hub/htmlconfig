@@ -2165,7 +2165,7 @@ function collectReviews() {
 function buildProjectItems() {
   var c = document.getElementById('projects-items');
   c.innerHTML = '';
-  for (var i = 0; i < 3; i++) {
+  for (var i = 0; i < 8; i++) {
     var div = document.createElement('div');
     div.className = 'repeater-item';
     var photosHtml = '';
@@ -2196,7 +2196,7 @@ function populateProjects(d) {
   setVal('projects-heading', d.heading || '');
   setCheck('projects-highlight', d.highlight || false);
   var items = d.items || [];
-  for (var i = 0; i < 3; i++) {
+  for (var i = 0; i < 8; i++) {
     var it = items[i] || {};
     setVal('proj-title-'     + i, it.title     || '');
     setVal('proj-shortDesc-' + i, it.shortDesc  || '');
@@ -2213,7 +2213,7 @@ function populateProjects(d) {
 
 function collectProjects() {
   var items = [];
-  for (var i = 0; i < 3; i++) {
+  for (var i = 0; i < 8; i++) {
     var title = getVal('proj-title-' + i);
     var photos = [];
     for (var p = 0; p < 4; p++) photos.push(getVal('proj-photo-' + p + '-' + i));

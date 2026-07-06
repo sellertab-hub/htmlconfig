@@ -2524,6 +2524,7 @@ function populateEstimate(d) {
   setVal('estimate-orderCustomUrl', d.orderCustomUrl || '');
   toggleEstimateOrderUrl();
   setVal('estimate-customBtnLabel', d.customBtnLabel || '');
+  setVal('estimate-customBtnUrl',   d.customBtnUrl   || '');
   setVal('estimate-customBtnPopup', d.customBtnPopup || '');
 }
 
@@ -2553,6 +2554,7 @@ function collectEstimate() {
     orderAction:     oaEl ? oaEl.value : 'order',
     orderCustomUrl:  getVal('estimate-orderCustomUrl'),
     customBtnLabel:  getVal('estimate-customBtnLabel'),
+    customBtnUrl:    getVal('estimate-customBtnUrl'),
     customBtnPopup:  getVal('estimate-customBtnPopup'),
   };
 }
@@ -3489,8 +3491,14 @@ document.addEventListener('keydown', function(e) {
             <small style="color:var(--text-2);font-size:11px;margin-top:4px;display:block">Оставьте пустым — кнопка не будет показана</small>
           </div>
           <div class="field">
-            <label>Текст попапа</label>
+            <label>Ссылка при нажатии</label>
+            <input type="url" id="estimate-customBtnUrl" placeholder="https://...">
+            <small style="color:var(--text-2);font-size:11px;margin-top:4px;display:block">Если заполнено — кнопка в попапе станет ссылкой; без попапа — открывает ссылку сразу</small>
+          </div>
+          <div class="field">
+            <label>Текст попапа <span style="color:var(--text-3);font-weight:400">(необязательно)</span></label>
             <textarea id="estimate-customBtnPopup" rows="3" placeholder="Менеджер уже видит ваше сообщение и свяжется с вами в ближайшее время."></textarea>
+            <small style="color:var(--text-2);font-size:11px;margin-top:4px;display:block">Если пустой — клик по кнопке сразу открывает ссылку</small>
           </div>
           <div class="save-row">
             <button class="btn btn-primary btn-lg" onclick="saveBlock('estimate')">Сохранить смету</button>

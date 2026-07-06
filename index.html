@@ -2523,6 +2523,8 @@ function populateEstimate(d) {
   if (oa) oa.value = d.orderAction || 'order';
   setVal('estimate-orderCustomUrl', d.orderCustomUrl || '');
   toggleEstimateOrderUrl();
+  setVal('estimate-customBtnLabel', d.customBtnLabel || '');
+  setVal('estimate-customBtnPopup', d.customBtnPopup || '');
 }
 
 function toggleEstimateOrderUrl() {
@@ -2550,6 +2552,8 @@ function collectEstimate() {
     showExcel:       getCheck('estimate-showExcel'),
     orderAction:     oaEl ? oaEl.value : 'order',
     orderCustomUrl:  getVal('estimate-orderCustomUrl'),
+    customBtnLabel:  getVal('estimate-customBtnLabel'),
+    customBtnPopup:  getVal('estimate-customBtnPopup'),
   };
 }
 
@@ -3476,6 +3480,17 @@ document.addEventListener('keydown', function(e) {
               <label>URL кнопки</label>
               <input type="text" id="estimate-orderCustomUrl" placeholder="https://...">
             </div>
+          </div>
+          <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+          <div class="card-title"><span>➕</span> Кастомная кнопка</div>
+          <div class="field">
+            <label>Название кнопки</label>
+            <input type="text" id="estimate-customBtnLabel" placeholder="Например: Запросить замерщика">
+            <small style="color:var(--text-2);font-size:11px;margin-top:4px;display:block">Оставьте пустым — кнопка не будет показана</small>
+          </div>
+          <div class="field">
+            <label>Текст попапа</label>
+            <textarea id="estimate-customBtnPopup" rows="3" placeholder="Менеджер уже видит ваше сообщение и свяжется с вами в ближайшее время."></textarea>
           </div>
           <div class="save-row">
             <button class="btn btn-primary btn-lg" onclick="saveBlock('estimate')">Сохранить смету</button>

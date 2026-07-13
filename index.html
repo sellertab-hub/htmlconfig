@@ -913,6 +913,12 @@ textarea { resize: vertical; min-height: 70px; }
         <span class="nav-item-inner"><span>Тема</span></span>
         <span class="nav-static-badge">всегда</span>
       </button>
+      <!-- Static: Меню навигации -->
+      <button class="nav-item-static" id="nav-nav-static" onclick="showNavSection()">
+        <span class="nav-drag-handle" style="visibility:hidden">&#8942;&#8942;</span>
+        <span class="nav-item-inner"><span>Меню</span></span>
+        <span class="nav-static-badge">всегда</span>
+      </button>
       <div class="sidebar-nav-header">
         <span class="sidebar-nav-label">Блоки</span>
         <div class="sidebar-nav-actions">
@@ -926,6 +932,102 @@ textarea { resize: vertical; min-height: 70px; }
     <div class="add-block-dropdown" id="add-block-dropdown" style="display:none">
       <div class="add-block-list" id="add-block-list"><!-- built by JS --></div>
     </div>
+
+    <!-- Nav section (static, always shown, not in blockOrder) -->
+    <!-- ── МЕНЮ НАВИГАЦИИ ──────────────────────────────── -->
+    <div class="section-card" id="sec-nav" data-section="nav">
+      <div class="section-title">Меню навигации</div>
+      <div class="card">
+        <p style="font-size:12px;color:var(--text-2);margin:0 0 14px;">
+        До 4 пунктов. Цель — блок на странице (скролл) или своя ссылка.
+        </p>
+        <!-- Пункт 1 -->
+        <div class="card-title"><span>1</span> Пункт меню</div>
+        <div class="field-row field-row-2" style="margin-bottom:4px;">
+        <div class="field"><label>Название</label><input type="text" id="nav-label-0" placeholder="Смета"></div>
+        <div class="field">
+          <label>Цель</label>
+          <select id="nav-target-0" onchange="toggleNavUrl(0)">
+            <option value="#estimate">Смета</option>
+            <option value="#products-wrap">Товары</option>
+            <option value="#projects-wrap">Проекты</option>
+            <option value="#contacts">Контакты</option>
+            <option value="#cta-wrap">CTA</option>
+            <option value="#banner-0">Баннер</option>
+            <option value="url">Своя ссылка</option>
+          </select>
+        </div>
+        </div>
+        <div class="field" id="nav-url-wrap-0" style="display:none;">
+        <label>URL</label><input type="text" id="nav-url-0" placeholder="https://...">
+        </div>
+        <!-- Пункт 2 -->
+        <div class="card-title" style="margin-top:12px;"><span>2</span> Пункт меню</div>
+        <div class="field-row field-row-2" style="margin-bottom:4px;">
+        <div class="field"><label>Название</label><input type="text" id="nav-label-1" placeholder="Товары"></div>
+        <div class="field">
+          <label>Цель</label>
+          <select id="nav-target-1" onchange="toggleNavUrl(1)">
+            <option value="#estimate">Смета</option>
+            <option value="#products-wrap">Товары</option>
+            <option value="#projects-wrap">Проекты</option>
+            <option value="#contacts">Контакты</option>
+            <option value="#cta-wrap">CTA</option>
+            <option value="#banner-0">Баннер</option>
+            <option value="url">Своя ссылка</option>
+          </select>
+        </div>
+        </div>
+        <div class="field" id="nav-url-wrap-1" style="display:none;">
+        <label>URL</label><input type="text" id="nav-url-1" placeholder="https://...">
+        </div>
+        <!-- Пункт 3 -->
+        <div class="card-title" style="margin-top:12px;"><span>3</span> Пункт меню</div>
+        <div class="field-row field-row-2" style="margin-bottom:4px;">
+        <div class="field"><label>Название</label><input type="text" id="nav-label-2" placeholder="Проекты"></div>
+        <div class="field">
+          <label>Цель</label>
+          <select id="nav-target-2" onchange="toggleNavUrl(2)">
+            <option value="#estimate">Смета</option>
+            <option value="#products-wrap">Товары</option>
+            <option value="#projects-wrap">Проекты</option>
+            <option value="#contacts">Контакты</option>
+            <option value="#cta-wrap">CTA</option>
+            <option value="#banner-0">Баннер</option>
+            <option value="url">Своя ссылка</option>
+          </select>
+        </div>
+        </div>
+        <div class="field" id="nav-url-wrap-2" style="display:none;">
+        <label>URL</label><input type="text" id="nav-url-2" placeholder="https://...">
+        </div>
+        <!-- Пункт 4 -->
+        <div class="card-title" style="margin-top:12px;"><span>4</span> Пункт меню</div>
+        <div class="field-row field-row-2" style="margin-bottom:4px;">
+        <div class="field"><label>Название</label><input type="text" id="nav-label-3" placeholder="Контакты"></div>
+        <div class="field">
+          <label>Цель</label>
+          <select id="nav-target-3" onchange="toggleNavUrl(3)">
+            <option value="#estimate">Смета</option>
+            <option value="#products-wrap">Товары</option>
+            <option value="#projects-wrap">Проекты</option>
+            <option value="#contacts">Контакты</option>
+            <option value="#cta-wrap">CTA</option>
+            <option value="#banner-0">Баннер</option>
+            <option value="url">Своя ссылка</option>
+          </select>
+        </div>
+        </div>
+        <div class="field" id="nav-url-wrap-3" style="display:none;">
+        <label>URL</label><input type="text" id="nav-url-3" placeholder="https://...">
+        </div>
+        <div class="save-row" style="margin-top:16px;">
+        <button class="btn btn-primary btn-lg" onclick="saveBlock('nav')">Сохранить меню</button>
+        <span class="save-msg" id="save-msg-nav"></span>
+        </div>
+      </div>
+    </div>
+
 
     <!-- Sections Panel (dynamic) -->
     <div class="sections-panel" id="sections-container"><!-- built by JS --></div>
@@ -1194,8 +1296,8 @@ function sendAllBlocksToPreview() {
     } catch(e) { console.warn('[KP] collectTheme error:', e); }
   }
 
-  // client-bar и manager-popup — статические блоки (не в blockOrder)
-  ['client-bar', 'manager-popup'].forEach(function(key) {
+  // nav, client-bar, manager-popup — статические блоки (не в blockOrder)
+  ['nav', 'client-bar', 'manager-popup'].forEach(function(key) {
     var collector = BLOCK_COLLECTORS[key];
     if (!collector) return;
     try {
@@ -1205,7 +1307,7 @@ function sendAllBlocksToPreview() {
   });
 
   // Then all dynamic blocks in blockOrder sequence
-  var seen = { theme: true, 'client-bar': true, 'manager-popup': true };
+  var seen = { theme: true, nav: true, 'client-bar': true, 'manager-popup': true };
   blockOrder.forEach(function(entry) {
     var collector = BLOCK_COLLECTORS[entry.type];
     if (!collector) return;
@@ -1497,7 +1599,7 @@ var _uidCounter = 0;
 function makeUid() { return 'b' + (++_uidCounter); }
 
 var BLOCK_LABELS = {
-  theme: 'Тема', banner: 'Баннер', counters: 'Счётчики', about: 'О компании',
+  theme: 'Тема', nav: 'Меню', banner: 'Баннер', counters: 'Счётчики', about: 'О компании',
   steps: 'Этапы работы', faq: 'FAQ', reviews: 'Отзывы', projects: 'Проекты',
   cta: 'CTA', footer: 'Футер', installment: 'Рассрочка', advantages: 'Гарантии',
   estimate: 'Смета', 'manager-popup': 'Попап менеджера', gallery: 'Галерея', 'text-block': 'Текст-блок',
@@ -1506,6 +1608,7 @@ var BLOCK_LABELS = {
 
 var BLOCK_POPULATORS = {
   theme:        populateTheme,
+  nav:          populateNav,
   banner:       populateBanner,
   counters:     populateCounters,
   about:        populateAbout,
@@ -1659,6 +1762,24 @@ function buildSectionsPanel() {
 
 // ── ACTIVE SECTION ────────────────────────────────────────────
 var activeUid = '';
+
+function showNavSection() {
+  // Скрываем все секции
+  document.querySelectorAll('.section-card').forEach(function(s) {
+    s.style.display = 'none';
+    s.classList.remove('active');
+  });
+  // Деактивируем все nav-items
+  document.querySelectorAll('.nav-item-static, .nav-item').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  // Показываем секцию nav
+  var navSec = document.getElementById('sec-nav');
+  if (navSec) { navSec.style.display = 'block'; navSec.classList.add('active'); }
+  var navBtn = document.getElementById('nav-nav-static');
+  if (navBtn) navBtn.classList.add('active');
+  activeUid = null;
+}
 
 function showThemeSection() {
   // Deselect dynamic blocks, select theme static button
@@ -1862,6 +1983,47 @@ function populateTheme(d) {
   setVal('theme-logo', d.logo || '');
   setVal('theme-logoHref', d.logoHref || '');
   if (d.logo) triggerPreview('theme-logo', 'theme-logo-preview');
+}
+
+// ── NAV ──────────────────────────────────────────────────────
+function toggleNavUrl(i) {
+  var sel  = document.getElementById('nav-target-' + i);
+  var wrap = document.getElementById('nav-url-wrap-' + i);
+  if (wrap) wrap.style.display = (sel && sel.value === 'url') ? '' : 'none';
+}
+
+function collectNav() {
+  var items = [];
+  for (var i = 0; i < 4; i++) {
+    var label = getVal('nav-label-' + i);
+    var sel   = document.getElementById('nav-target-' + i);
+    var target = sel ? sel.value : '';
+    var href   = (target === 'url') ? getVal('nav-url-' + i) : target;
+    if (label) {
+      items.push({ label: label, target: target, href: href });
+    }
+  }
+  return { type: 'nav', items: items };
+}
+
+function populateNav(d) {
+  var items = (d && d.items) ? d.items : [];
+  for (var i = 0; i < 4; i++) {
+    var item = items[i] || {};
+    setVal('nav-label-' + i, item.label || '');
+    var sel = document.getElementById('nav-target-' + i);
+    if (sel) {
+      // Если target — url или нет совпадения — ставим 'url'
+      var target = item.target || '';
+      var found = false;
+      for (var o = 0; o < sel.options.length; o++) {
+        if (sel.options[o].value === target) { sel.value = target; found = true; break; }
+      }
+      if (!found) sel.value = 'url';
+    }
+    setVal('nav-url-' + i, item.href || '');
+    toggleNavUrl(i);
+  }
 }
 
 function collectTheme() {
@@ -2671,6 +2833,7 @@ function collectTextBlock() {
 // ── BLOCK COLLECTORS ─────────────────────────────────────────
 var BLOCK_COLLECTORS = {
   theme:        collectTheme,
+  nav:          collectNav,
   banner:       collectBanner,
   counters:     collectCounters,
   about:        collectAbout,

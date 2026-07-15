@@ -2873,7 +2873,7 @@ async function saveBlock(blockKey) {
 
   try {
     var allBlocks  = collectAllBlocks();
-    var allColumns = blockOrder.map(function(e) { return e.type; });
+    var allColumns = allBlocks.map(function(b) { return b.type || ''; });
     var payload = JSON.stringify({
       action: 'saveconfig',
       config: { blocks: allBlocks, columns: allColumns }
@@ -2901,6 +2901,12 @@ function collectAllBlocks() {
   if (BLOCK_COLLECTORS['theme']) {
     try { var t = BLOCK_COLLECTORS['theme'](); if (t) result.push(t); } catch(e) {}
   }
+  // Статичные блоки (не в blockOrder): nav, client-bar, manager-popup
+  ['nav', 'client-bar', 'manager-popup'].forEach(function(key) {
+    var collector = BLOCK_COLLECTORS[key];
+    if (!collector) return;
+    try { var obj = collector(); if (obj && obj.type) result.push(obj); } catch(e) {}
+  });
   blockOrder.forEach(function(entry) {
     var collector = BLOCK_COLLECTORS[entry.type];
     if (!collector) { result.push({ type: entry.type }); return; }
@@ -3046,7 +3052,7 @@ async function saveAllBlocks() {
   if (btn) { btn.classList.add('saving'); btn.textContent = '▼ СОХРАНЕНИЕ…'; }
   try {
     var allBlocks  = collectAllBlocks();
-    var allColumns = blockOrder.map(function(e) { return e.type; });
+    var allColumns = allBlocks.map(function(b) { return b.type || ''; });
     var payload = JSON.stringify({
       action: 'saveconfig',
       config: { blocks: allBlocks, columns: allColumns }

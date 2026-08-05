@@ -1232,12 +1232,9 @@ window.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // When iframe loads, send all blocks (если данные уже есть — сразу, иначе чуть позже)
+  // When iframe loads, send all blocks
   document.getElementById('preview-frame').addEventListener('load', function() {
-    // blockOrder заполнен только после populateAll — если loadConfig ещё не завершился,
-    // ждём дольше чтобы данные успели прийти
-    var delay = (webappUrl && blockOrder.length <= 14) ? 1500 : 300;
-    setTimeout(sendAllBlocksToPreview, delay);
+    setTimeout(sendAllBlocksToPreview, 300);
   });
 });
 
@@ -1391,9 +1388,10 @@ function sendAllBlocksToPreview() {
   });
 
   // Send as single ordered init message — template rebuilds container in this order
+  console.log('[KP preview] sendAllBlocksToPreview: blocks=', blocks.length, blocks.map(function(b){return b.type;}));
   try {
     frame.contentWindow.postMessage({ type: 'kp-blocks-init', blocks: blocks }, '*');
-  } catch(e) {}
+  } catch(e) { console.error('[KP preview] postMessage error:', e); }
 }
 
 // ── toBlockObject — flat keys → typed block objects ──────────
@@ -1796,14 +1794,10 @@ async function loadConfig() {
     setStatus('connected', 'Подключено');
     showToast('Конфигурация загружена', 'success');
     await loadVariantsList(currentVariant);
-    // Отправляем данные в превью после полной загрузки
-    // Если iframe уже готов — сразу, если нет — load event подхватит
-    var _frame = document.getElementById('preview-frame');
-    if (_frame && _frame.contentWindow && _frame.src !== 'about:blank') {
-      setTimeout(sendAllBlocksToPreview, 300);
-    } else {
-      // iframe ещё не загружен — load event сам вызовет sendAllBlocksToPreview
-    }
+    // Тройная страховка — гарантируем отправку после populateAll
+    setTimeout(sendAllBlocksToPreview, 500);
+    setTimeout(sendAllBlocksToPreview, 1500);
+    setTimeout(sendAllBlocksToPreview, 3000);
   } catch (err) {
     setStatus('error', 'Ошибка');
     showToast('Ошибка загрузки: ' + err.message, 'error');
@@ -2183,6 +2177,7 @@ function populateAll(cfg) {
   _redoStack = [];
   historyUpdateButtons();
   markClean();
+  console.log('[KP] populateAll done, blockOrder:', blockOrder.map(function(e){return e.type;}));
 }
 
 // ── THEME ─────────────────────────────────────────────────────

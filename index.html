@@ -1381,6 +1381,15 @@ function sendAllBlocksToPreview() {
     } catch(e) { console.warn('[KP] collect error for', entry.type, e); }
   });
 
+  // Дедуплицируем перед отправкой (защита от старых данных с дублями)
+  var seenTypes = {};
+  blocks = blocks.filter(function(b) {
+    if (!b || !b.type) return false;
+    if (seenTypes[b.type]) return false;
+    seenTypes[b.type] = true;
+    return true;
+  });
+
   // Send as single ordered init message — template rebuilds container in this order
   try {
     frame.contentWindow.postMessage({ type: 'kp-blocks-init', blocks: blocks }, '*');
@@ -1675,6 +1684,9 @@ async function onVariantChange(name) {
     var resp = await fetch(url, { mode: 'cors', cache: 'no-store' });
     var json = await resp.json();
     if (!json.ok) throw new Error(json.error || 'getconfig failed');
+    if (json.config && json.config.blocks) {
+      json.config.blocks = deduplicateBlocks(json.config.blocks);
+    }
     populateAll(json);
     markClean();
     showToast('Вариант «' + (name || 'по умолчанию') + '» загружен', 'success');
@@ -1776,6 +1788,10 @@ async function loadConfig() {
     // Server returns { ok:true, config:{ blocks:[...], columns:[...] } }
     // Устанавливаем currentVariant из ответа сервера
     if (json.config && json.config.variantName) currentVariant = json.config.variantName;
+    // Дедуплицируем блоки (на случай старых сохранений с дублями)
+    if (json.config && json.config.blocks) {
+      json.config.blocks = deduplicateBlocks(json.config.blocks);
+    }
     populateAll(json);
     setStatus('connected', 'Подключено');
     showToast('Конфигурация загружена', 'success');
@@ -2114,6 +2130,19 @@ function onNavDragEnd(e) {
 // ── POPULATE ALL ─────────────────────────────────────────────
 // cfg = { ok:true, config:{ blocks:[{type,...},...], columns:[...] } }
 //   or = { blocks:[...], columns:[...] }   (direct)
+
+// Дедупликация блоков из GAS (старые сохранения могли записать дубли)
+function deduplicateBlocks(blocks) {
+  if (!Array.isArray(blocks)) return blocks;
+  var seen = {};
+  return blocks.filter(function(b) {
+    if (!b || !b.type) return false;
+    if (seen[b.type]) return false;
+    seen[b.type] = true;
+    return true;
+  });
+}
+
 function populateAll(cfg) {
   // Normalise: extract blocks array
   var data = cfg;

@@ -216,6 +216,44 @@ html, body {
   flex-shrink: 0;
 }
 
+/* Панель вариантов КП */
+.variants-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-2, #FAFAFA);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.variants-bar label {
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+#variant-select {
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  min-width: 140px;
+}
+.variants-bar button {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+.variants-bar button:hover { background: var(--bg, #F2F2F2); }
+.variants-bar button.danger { color: #c0392b; border-color: #e0b0ae; }
+.variants-bar button.danger:hover { background: #fdf0ef; }
+.variants-bar .vbar-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+
 /* ═══════════════════════════════════════════════════════
    MAIN LAYOUT
 ═══════════════════════════════════════════════════════ */
@@ -899,6 +937,19 @@ textarea { resize: vertical; min-height: 70px; }
   </div>
 </div>
 
+<!-- VARIANTS BAR -->
+<div class="variants-bar">
+  <label>Вариант КП:</label>
+  <select id="variant-select" onchange="onVariantChange(this.value)">
+    <option value="">(загрузка…)</option>
+  </select>
+  <button onclick="variantNew()">+ Новый</button>
+  <button onclick="variantCopy()">Копировать</button>
+  <button onclick="variantRename()">Переименовать</button>
+  <div class="vbar-sep"></div>
+  <button class="danger" onclick="variantDelete()">Удалить</button>
+</div>
+
 <!-- MAIN LAYOUT -->
 <div class="app-layout">
 
@@ -975,8 +1026,22 @@ function createTemplateBlob() {
 // ── STATE ────────────────────────────────────────────────────
 var webappUrl = '';
 var currentTemplateUrl = '';
+var currentVariant = '';
+var _autoConnecting = false; // true, когда идёт автоподключение и грузится реальный конфиг — исключает «мигание» preview
 var LS_WEBAPP_KEY = 'kp_webapp_url';
 var LS_TEMPLATE_KEY = 'kp_template_url';
+
+// Убирает дублирующиеся по типу блоки (на случай старых сохранений с дублями)
+function deduplicateBlocks(blocks) {
+  if (!Array.isArray(blocks)) return blocks;
+  var seen = {};
+  return blocks.filter(function(b) {
+    if (!b || !b.type) return false;
+    if (seen[b.type]) return false;
+    seen[b.type] = true;
+    return true;
+  });
+}
 
 // ── INIT ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
@@ -1005,6 +1070,9 @@ window.addEventListener('DOMContentLoaded', function() {
       document.getElementById('webapp-url').value = savedUrl;
       webappUrl = savedUrl;
       localStorage.setItem(LS_WEBAPP_KEY, savedUrl);
+      // Флаг гонки: пока автоподключение в процессе, не даём раннему load-листенеру превью
+      // отправить дефолтный/частичный набор блоков в preview до того, как загрузится реальный конфиг.
+      _autoConnecting = true;
       // Автоматически загружаем конфиг без ping
       loadConfig();
     }
@@ -1071,7 +1139,9 @@ window.addEventListener('DOMContentLoaded', function() {
   }
 
   // When iframe loads, send all blocks
+  // (если идёт автоподключение к Apps Script — не шлём демо-данные раньше, чем загрузится реальный конфиг — исключает видимое «мигание» превью)
   document.getElementById('preview-frame').addEventListener('load', function() {
+    if (_autoConnecting) return;
     setTimeout(sendAllBlocksToPreview, 300);
   });
 });
@@ -1466,22 +1536,162 @@ async function connectAndLoad() {
 
 async function loadConfig() {
   if (!webappUrl) return;
+  setStatus('loading', 'Загрузка…');
   showLoading(true);
   try {
-    var url = webappUrl + '?action=getconfig&t=' + Date.now();
+    var url = webappUrl + '?action=getconfig' + (currentVariant ? '&variant=' + encodeURIComponent(currentVariant) : '') + '&t=' + Date.now();
     var resp = await fetch(url, { mode: 'cors', cache: 'no-store' });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     var json = await resp.json();
     if (json.ok === false) throw new Error(json.error || 'getConfig failed');
-    // Server returns { ok:true, config:{ blocks:[...], columns:[...] } }
+    // Server returns { ok:true, config:{ blocks:[...], columns:[...], variantName:'' } }
+    // Устанавливаем currentVariant из ответа сервера
+    if (json.config && json.config.variantName !== undefined) currentVariant = json.config.variantName;
+    // Дедуплицируем блоки (на случай старых сохранений с дублями)
+    if (json.config && json.config.blocks) {
+      json.config.blocks = deduplicateBlocks(json.config.blocks);
+    }
     populateAll(json);
+    setStatus('connected', 'Подключено');
     showToast('Конфигурация загружена', 'success');
+    loadVariantsList(currentVariant);
+    _autoConnecting = false;
     setTimeout(sendAllBlocksToPreview, 500);
   } catch (err) {
+    setStatus('error', 'Ошибка');
+    _autoConnecting = false;
     showToast('Ошибка загрузки: ' + err.message, 'error');
   } finally {
     showLoading(false);
   }
+}
+
+/** Обновляет список вариантов КП в выпадающем меню */
+async function loadVariantsList(selectName) {
+  if (!webappUrl) return;
+  try {
+    var resp = await fetch(webappUrl + '?action=list_kp_variants&t=' + Date.now(), { mode: 'cors', cache: 'no-store' });
+    var json = await resp.json();
+    var sel  = document.getElementById('variant-select');
+    if (!sel) return;
+    var variants = (json.ok && json.variants) ? json.variants : [];
+    sel.innerHTML = '';
+    if (!variants.length) {
+      sel.innerHTML = '<option value="">(по умолчанию)</option>';
+      currentVariant = '';
+      return;
+    }
+    variants.forEach(function(nm) {
+      var opt = document.createElement('option');
+      opt.value = nm;
+      opt.textContent = nm;
+      if (nm === (selectName || currentVariant)) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    // Устанавливаем currentVariant по выбранному
+    currentVariant = sel.value;
+  } catch(e) {
+    console.warn('loadVariantsList error:', e);
+  }
+}
+
+/** Переключение варианта — загружаем конфиг нужной строки */
+async function onVariantChange(name) {
+  currentVariant = name;
+  if (!webappUrl) return;
+  showLoading(true);
+  try {
+    var url  = webappUrl + '?action=getconfig&variant=' + encodeURIComponent(name) + '&t=' + Date.now();
+    var resp = await fetch(url, { mode: 'cors', cache: 'no-store' });
+    var json = await resp.json();
+    if (!json.ok) throw new Error(json.error || 'getconfig failed');
+    if (json.config && json.config.blocks) {
+      json.config.blocks = deduplicateBlocks(json.config.blocks);
+    }
+    populateAll(json);
+    markClean();
+    showToast('Вариант «' + (name || 'по умолчанию') + '» загружен', 'success');
+    // Даём DOM время обновиться после populateAll
+    setTimeout(sendAllBlocksToPreview, 600);
+  } catch(e) {
+    showToast('Ошибка загрузки варианта: ' + e.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+/** Создать новый вариант */
+async function variantNew() {
+  if (!webappUrl) { showToast('Сначала подключитесь', 'error'); return; }
+  var name = prompt('Название нового варианта:');
+  if (!name || !name.trim()) return;
+  name = name.trim();
+  var copyFrom = confirm('Скопировать блоки из текущего варианта «' + (currentVariant || 'по умолчанию') + '»?\nОК — копировать, Отмена — пустой.');
+  if (copyFrom) {
+    var payload = JSON.stringify({ action: 'copy_kp_variant', src: currentVariant, dest: name });
+    try {
+      await fetch(webappUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload });
+      await loadVariantsList(name);
+      await onVariantChange(name);
+      showToast('Вариант «' + name + '» создан (копия)', 'success');
+    } catch(e) { showToast('Ошибка: ' + e.message, 'error'); }
+  } else {
+    currentVariant = name;
+    var sel = document.getElementById('variant-select');
+    if (sel) {
+      var opt = document.createElement('option');
+      opt.value = name; opt.textContent = name; opt.selected = true;
+      sel.appendChild(opt);
+    }
+    showToast('Вариант «' + name + '» создан. Настройте блоки и нажмите Сохранить.', 'success');
+  }
+}
+
+/** Копировать текущий вариант */
+async function variantCopy() {
+  if (!webappUrl) { showToast('Сначала подключитесь', 'error'); return; }
+  var name = prompt('Название копии:', (currentVariant ? currentVariant + ' (копия)' : 'Копия'));
+  if (!name || !name.trim()) return;
+  name = name.trim();
+  var payload = JSON.stringify({ action: 'copy_kp_variant', src: currentVariant, dest: name });
+  try {
+    await fetch(webappUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload });
+    await loadVariantsList(name);
+    showToast('Скопировано в «' + name + '»', 'success');
+  } catch(e) { showToast('Ошибка: ' + e.message, 'error'); }
+}
+
+/** Переименовать текущий вариант */
+async function variantRename() {
+  if (!webappUrl) { showToast('Сначала подключитесь', 'error'); return; }
+  var oldName = currentVariant;
+  var newName = prompt('Новое название:', oldName);
+  if (!newName || !newName.trim() || newName.trim() === oldName) return;
+  newName = newName.trim();
+  var payload = JSON.stringify({ action: 'rename_kp_variant', oldName: oldName, newName: newName });
+  try {
+    await fetch(webappUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload });
+    currentVariant = newName;
+    await loadVariantsList(newName);
+    showToast('Переименовано в «' + newName + '»', 'success');
+  } catch(e) { showToast('Ошибка: ' + e.message, 'error'); }
+}
+
+/** Удалить текущий вариант */
+async function variantDelete() {
+  if (!webappUrl) { showToast('Сначала подключитесь', 'error'); return; }
+  var name = currentVariant;
+  if (!name) { showToast('Нельзя удалить вариант без имени', 'error'); return; }
+  if (!confirm('Удалить вариант «' + name + '»? Это действие необратимо.')) return;
+  var payload = JSON.stringify({ action: 'delete_kp_variant', name: name });
+  try {
+    await fetch(webappUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload });
+    currentVariant = '';
+    await loadVariantsList('');
+    var sel = document.getElementById('variant-select');
+    if (sel && sel.value) await onVariantChange(sel.value);
+    showToast('Вариант «' + name + '» удалён', 'success');
+  } catch(e) { showToast('Ошибка: ' + e.message, 'error'); }
 }
 
 // ── BLOCK ORDER STATE ────────────────────────────────────────
@@ -2703,14 +2913,18 @@ async function saveBlock(blockKey) {
     var allColumns = blockOrder.map(function(e) { return e.type; });
     var payload = JSON.stringify({
       action: 'saveconfig',
+      variant: currentVariant,
       config: { blocks: allBlocks, columns: allColumns }
     });
-    await fetch(webappUrl, {
+    var resp = await fetch(webappUrl, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
+      mode: 'cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: payload
     });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var json = await resp.json();
+    if (json && json.ok === false) throw new Error(json.error || 'сервер вернул ошибку');
     if (msgEl) { msgEl.textContent = 'Сохранено'; msgEl.className = 'save-msg ok'; }
     showToast('Блок «' + (BLOCK_LABELS[blockKey] || blockKey) + '» сохранён', 'success');
     setTimeout(function() { if (msgEl) { msgEl.textContent = ''; msgEl.className = 'save-msg'; } }, 4000);
@@ -2876,16 +3090,20 @@ async function saveAllBlocks() {
     var allColumns = blockOrder.map(function(e) { return e.type; });
     var payload = JSON.stringify({
       action: 'saveconfig',
+      variant: currentVariant,
       config: { blocks: allBlocks, columns: allColumns }
     });
-    await fetch(webappUrl, {
+    var resp = await fetch(webappUrl, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
+      mode: 'cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: payload
     });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var json = await resp.json();
+    if (json && json.ok === false) throw new Error(json.error || 'сервер вернул ошибку');
     markClean();
-    if (btn) btn.textContent = '▼ СОХРАНИТЬ';
+    if (btn) { btn.classList.remove('saving'); btn.textContent = '▼ СОХРАНИТЬ'; }
     showToast('Все изменения сохранены', 'success');
     sendAllBlocksToPreview();
   } catch (err) {

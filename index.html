@@ -1455,7 +1455,9 @@ function toBlockObject(sectionKey, flatData) {
         'список': 'list',
         'список с итогом по группам': 'list-group-total',
         'таблица': 'table',
-        'таблица с фото': 'table-photo'
+        'таблица с фото': 'table-photo',
+        'таблица с горизонтальным скроллом': 'table-scroll',
+        'таблица со скроллом и итого по категориям': 'table-scroll-category'
       };
       return {
         type: 'estimate',
@@ -3658,6 +3660,7 @@ document.addEventListener('keydown', function(e) {
                 <option value="table">Таблица</option>
                 <option value="table-photo">Таблица с фото</option>
                 <option value="table-scroll">Таблица с горизонтальным скроллом</option>
+                <option value="table-scroll-category">Таблица со скроллом и итого по категориям</option>
               </select>
             </div>
             <div class="field" style="display:flex;align-items:flex-end;padding-bottom:2px;">
